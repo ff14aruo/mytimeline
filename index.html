@@ -185,7 +185,7 @@ const EVENT = { name: 'FF14 ファンフェス', days: [{ id: 'd1', label: 'Day1
 const STAGE = { name: 'メインステージ', color: '#e0a800' };
 const SLOTS = [];
 const add = (dayId, start, end, title) => SLOTS.push({ id: dayId + '-' + start.replace(':', ''), dayId, start, end, title });
-add('d1', '09:00', '09:30', '開場');
+add('d1', '09:00', '', '開場');
 add('d1', '11:00', '13:00', '基調講演');
 add('d1', '13:00', '14:00', 'オープニング');
 add('d1', '15:00', '16:30', 'クリコン セミファイナル');
@@ -193,7 +193,7 @@ add('d1', '16:30', '17:00', '吉P一問一答タイムアタック');
 add('d1', '17:00', '18:30', 'クリコン ファイナル');
 add('d1', '19:30', '20:30', 'ピアノコンサート');
 add('d1', '20:30', '21:00', 'エンディング');
-add('d2', '09:00', '09:30', '開場');
+add('d2', '09:00', '', '開場');
 add('d2', '10:00', '10:30', 'オープニング');
 add('d2', '10:30', '12:00', '開発パネル');
 add('d2', '12:30', '13:30', 'LIVE Q&A');
@@ -273,9 +273,9 @@ function gridHTML(opts = {}) {
   if (showStage) {
     h += col();
     slots.forEach(s => {
-      const a = toMin(s.start), b = endMin(s.start, s.end), on = me.my.includes(s.id);
+      const a = toMin(s.start), b = s.end ? endMin(s.start, s.end) : a + 20, on = me.my.includes(s.id);
       h += `<button class="slot ${on ? 'on' : ''}" data-id="${s.id}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
-        + `<span class="t">${s.start}–${s.end}</span><span class="n">${esc(s.title)}</span></button>`;
+        + `<span class="t">${s.start}${s.end ? '–' + s.end : ''}</span><span class="n">${esc(s.title)}</span></button>`;
     });
     h += '</div>';
   }
