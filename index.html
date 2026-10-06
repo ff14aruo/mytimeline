@@ -149,8 +149,10 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 #exportArea{position:absolute;left:-10000px;top:0}
 /* 画像はスマホ1画面（縦長 9:16 前後）に収まる大きさで書き出す */
 .ex-grid{padding:16px;background:var(--surface);width:420px}
-.ex-grid h3{margin:0 0 4px;font-size:18px}
-.ex-grid .d{color:var(--muted);font-size:12px;margin-bottom:10px}
+/* タイトル行：右に日付タブと同じ見た目の Day 表記 */
+.ex-grid .ex-title{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ex-grid h3{margin:0;font-size:18px;flex:1}
+.ex-grid .daytabs{margin:0}
 .slot.tile{color:var(--text);border-left:4px solid var(--c)}
 .slot.tile.free{border:1.5px dashed var(--c);border-left:4px solid var(--c)}
 .slot.tile .pl{font-size:10.5px;color:var(--muted);word-break:break-word}
@@ -681,7 +683,7 @@ async function exportImage() {
   if (!inner && !wants.length) return toast('画像にする予定がありません');
   const cd = curDay();
   const area = $('#exportArea');
-  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　マイタイテ</div>${legendHTML()}${inner}`
+  area.innerHTML = `<div class="ex-grid"><div class="ex-title"><h3>${esc(EVENT.name)}</h3><div class="daytabs"><button class="active">${esc(cd.label)}<small>${slash(cd.date)}</small></button></div></div>${legendHTML()}${inner}`
     + (wants.length ? `<div class="ex-wants"><h4>やりたいこと（時間未定）</h4><ul>${wants.map(p => `<li>${esc(p[0])}（${esc(p[1])}）</li>`).join('')}</ul></div>` : '') + '</div>';
   layoutGrid(area);
   toast('画像を作成中…');
