@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ファンフェス マイタイテ</title>
+<meta name="description" content="FF14 ファンフェスのタイムテーブルから自分の予定を組み立てて、画像で保存できるツール">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --surface2:#efede8; --text:#1d1c1a; --muted:#6b6862;
+  --line:#dedbd4; --accent:#e4572e; --accent-text:#ffffff; --ok:#2e8b57; --warn:#c0392b;
+  --radius:12px; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151513; --surface:#1f1f1c; --surface2:#2a2a26; --text:#f1efe9; --muted:#a3a097;
+    --line:#3a3a35; --accent:#ff7a50; --accent-text:#1a0f0a; --ok:#5cc28a; --warn:#ff6b5b;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151513; --surface:#1f1f1c; --surface2:#2a2a26; --text:#f1efe9; --muted:#a3a097;
+  --line:#3a3a35; --accent:#ff7a50; --accent-text:#1a0f0a; --ok:#5cc28a; --warn:#ff6b5b;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+.app{max-width:960px;margin:0 auto;padding:0 16px 40px}
+header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.title-row{display:flex;align-items:center;gap:8px}
+.title-row h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.daytabs{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.daytabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:99px;padding:5px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.daytabs button small{color:var(--muted);font-weight:400;margin-left:4px}
+.daytabs button.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.daytabs button.active small{color:var(--bg);opacity:.75}
+.countdown{margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--surface);box-shadow:var(--shadow);font-size:13px;display:none}
+.countdown.show{display:block}
+.countdown b{font-variant-numeric:tabular-nums;font-size:16px;color:var(--accent)}
+.countdown .now{color:var(--ok);font-weight:600}
+.toolbar{display:flex;gap:6px;align-items:center;margin:12px 0 6px}
+.seg{display:flex;background:var(--surface2);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 4px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
+input,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:40px}
+input[type=time]{min-width:0}
+label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+label.f > input,label.f > textarea{margin-top:2px}
+.row{display:flex;gap:8px;align-items:center}
+.row > *{min-width:0}
+.grow{flex:1}
+.btn{border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--text);white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-text)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.danger{color:var(--warn)}
+.btn.icon{padding:8px 11px;flex:none;min-width:40px;display:flex;align-items:center;justify-content:center}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.empty{color:var(--muted);text-align:center;padding:40px 8px;background:var(--surface);border-radius:var(--radius)}
+.warn{color:var(--warn);font-size:12.5px;font-weight:600;margin:-2px 0 8px}
+
+/* grid */
+.grid-wrap{overflow:auto;max-height:calc(100vh - 230px);min-height:300px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
+.grid-inner{--tw:48px;--cw:120px;min-width:calc(var(--tw) + var(--cols) * var(--cw));background:var(--surface)}
+.g-head,.g-body{display:grid;grid-template-columns:var(--tw) repeat(var(--cols),minmax(var(--cw),1fr))}
+.g-head{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line)}
+.g-corner{position:sticky;left:0;background:var(--surface);z-index:4}
+.g-stage{padding:8px 6px;font-weight:700;font-size:13px;text-align:center;border-top:4px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-stage.mine{color:var(--muted)}
+.g-times{position:sticky;left:0;z-index:2;background:var(--surface);border-right:1px solid var(--line)}
+.g-time{position:absolute;left:0;right:0;font-size:11px;color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-7px);font-variant-numeric:tabular-nums}
+.g-col{position:relative;border-right:1px solid var(--line)}
+.g-col:last-child{border-right:0}
+.g-line{position:absolute;left:0;right:0;border-top:1px solid var(--line);opacity:.6}
+.g-line.half{border-top-style:dashed;opacity:.35}
+.slot{position:absolute;left:3px;right:3px;border:0;border-left:4px solid var(--c);border-radius:6px;padding:3px 6px;text-align:left;font:inherit;color:var(--text);cursor:pointer;overflow:hidden;display:flex;flex-direction:column}
+.slot .t{font-size:10.5px;opacity:.8;font-variant-numeric:tabular-nums}
+.slot .n{font-size:12.5px;font-weight:700;line-height:1.25;word-break:break-word}
+.slot.on{color:#fff}
+.slot.on .n::before{content:"✓ "}
+.slot.mine{border:1.5px dashed var(--muted);border-left:4px solid var(--muted);background:var(--surface2);right:auto}
+.slot.mine .pl{font-size:10.5px;color:var(--muted);word-break:break-word}
+.slot.compact{display:block;padding:2px 6px;line-height:1.25}
+.slot.compact .t{display:inline;margin-right:4px;font-size:10px}
+.slot.compact .n{display:inline;font-size:11.5px}
+.slot.compact .pl{display:inline;margin-left:4px}
+.slot .memo-dot{position:absolute;right:4px;bottom:2px;font-size:11px}
+.now-line{position:absolute;left:0;right:0;border-top:2px solid var(--warn);z-index:1;pointer-events:none}
+
+/* toast & sheets */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:90;display:none;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+.modal .box{background:var(--surface);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-width:560px;width:100%;max-height:92vh;overflow:auto}
+@media (min-width:600px){ .modal{align-items:center;padding:16px} .modal .box{border-radius:var(--radius)} }
+.modal h2{font-size:16px;margin:0 0 4px}
+.modal img{width:100%;border-radius:8px;display:block;margin:8px 0}
+
+/* export (offscreen) */
+#exportArea{position:fixed;left:-10000px;top:0}
+.ex-grid{padding:16px;background:var(--surface);min-width:360px}
+.ex-grid h3{margin:0 0 4px;font-size:18px}
+.ex-grid .d{color:var(--muted);font-size:12px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title-row"><h1 id="evTitle">FF14 ファンフェス</h1></div>
+    <div class="daytabs" id="dayTabs"></div>
+    <div class="countdown" id="countdown"></div>
+  </header>
+
+  <div class="toolbar">
+    <div class="seg grow" id="viewSeg">
+      <button data-v="all">すべて</button><button data-v="my">自分の予定</button><button data-v="mine">マイイベント</button>
+    </div>
+    <button class="btn primary icon" id="addBtn" aria-label="マイイベントを追加">＋</button>
+    <button class="btn icon" id="imgBtn" aria-label="画像で保存" title="画像で保存"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
+  </div>
+  <p class="hint" id="hint"></p>
+  <div id="grid"></div>
+</div>
+
+<!-- マイイベント追加・編集 -->
+<div class="modal" id="formModal">
+  <div class="box">
+    <h2 id="fHead">マイイベントを追加</h2>
+    <p class="hint" id="fDay"></p>
+    <label class="f">イベント名<input type="text" id="cTitle" placeholder="例：お昼ごはん"></label>
+    <label class="f">場所<input type="text" id="cPlace" list="placeList" placeholder="例：フードエリア"></label>
+    <datalist id="placeList"></datalist>
+    <div class="row">
+      <label class="f grow">開始<input type="time" id="cStart"></label>
+      <label class="f grow">終了（任意）<input type="time" id="cEnd"></label>
+    </div>
+    <label class="f">メモ<textarea id="cNote" rows="2"></textarea></label>
+    <div class="warn" id="fWarn"></div>
+    <div class="btns">
+      <button class="btn primary" id="cSave">追加</button>
+      <button class="btn ghost" id="cCancel">キャンセル</button>
+      <button class="btn ghost danger" id="cDel" style="display:none;margin-left:auto">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 画像プレビュー -->
+<div class="modal" id="imgModal">
+  <div class="box">
+    <div class="row"><h2 class="grow">画像で保存</h2><button class="btn ghost" id="imgClose">閉じる</button></div>
+    <p class="hint">いま表示中の日・表示のまま画像にしました。スマホは画像を長押しでも保存できます。</p>
+    <img id="imgPreview" alt="書き出した画像">
+    <div class="btns"><button class="btn primary" id="imgDl">ダウンロード</button><button class="btn" id="imgShare">共有…</button></div>
+  </div>
+</div>
+
+<div id="exportArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'fanfest-mytaite.v2';
+const PX = 1.6; // 1分あたりのpx
+
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const toMin = t => { const m = /^(\d{1,2}):(\d{2})/.exec(t || ''); return m ? (+m[1]) * 60 + (+m[2]) : NaN; };
+const fmt = m => { m = ((m % 1440) + 1440) % 1440; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+const endMin = (start, end) => { const a = toMin(start); let b = toMin(end); if (isNaN(b)) return a; if (b <= a) b += 1440; return b; };
+const normTime = t => { const m = toMin(String(t || '').trim().replace('：', ':')); return isNaN(m) ? null : fmt(m); };
+const hexA = (hex, a) => { const n = parseInt(hex.replace('#', ''), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const slash = d => d.replace(/^\d{4}-/, '').replace('-', '/');
+const absTime = (date, hhmm) => { const [y, m, d] = date.split('-').map(Number); const t = new Date(y, m - 1, d); t.setMinutes(toMin(hhmm)); return t.getTime(); };
+
+/* ---------- 公式タイムテーブル（ここを書き換えれば全員に反映） ---------- */
+const EVENT = { name: 'FF14 ファンフェス', days: [{ id: 'd1', label: 'Day1', date: '2026-10-31' }, { id: 'd2', label: 'Day2', date: '2026-11-01' }] };
+const STAGE = { name: 'メインステージ', color: '#e0a800' };
+const SLOTS = [];
+const add = (dayId, start, end, title) => SLOTS.push({ id: dayId + '-' + start.replace(':', ''), dayId, start, end, title });
+add('d1', '09:00', '09:30', '開場');
+add('d1', '11:00', '13:00', '基調講演');
+add('d1', '13:00', '14:00', 'オープニング');
+add('d1', '15:00', '16:30', 'クリコン セミファイナル');
+add('d1', '16:30', '17:00', '吉P一問一答タイムアタック');
+add('d1', '17:00', '18:30', 'クリコン ファイナル');
+add('d1', '19:30', '20:30', 'ピアノコンサート');
+add('d1', '20:30', '21:00', 'エンディング');
+add('d2', '09:00', '09:30', '開場');
+add('d2', '10:00', '10:30', 'オープニング');
+add('d2', '10:30', '12:00', '開発パネル');
+add('d2', '12:30', '13:30', 'LIVE Q&A');
+add('d2', '13:50', '15:00', 'ミラプリコレクション');
+add('d2', '15:30', '17:30', '直樹の部屋');
+add('d2', '19:30', '20:30', 'THE PRIMALSライブ');
+add('d2', '20:30', '21:00', 'エンディング');
+
+/* ---------- 自分のデータ（この端末のブラウザに保存） ---------- */
+const me = { my: [], custom: [], dayId: 'd1', view: 'all' };
+(function load() {
+  try {
+    const u = JSON.parse(localStorage.getItem(KEY)); if (!u) return;
+    const ids = new Set(SLOTS.map(s => s.id)), dids = new Set(EVENT.days.map(d => d.id));
+    me.my = [...new Set((u.my || []).map(String).filter(id => ids.has(id)))];
+    me.custom = (Array.isArray(u.custom) ? u.custom : []).filter(c => c && c.title && normTime(c.start)).map(c => ({
+      id: String(c.id || uid()), dayId: dids.has(c.dayId) ? c.dayId : 'd1', start: normTime(c.start), end: normTime(c.end) || '',
+      title: String(c.title).slice(0, 100), place: String(c.place || '').slice(0, 100), note: String(c.note || '').slice(0, 2000) }));
+    if (dids.has(u.dayId)) me.dayId = u.dayId;
+    if (['all', 'my', 'mine'].includes(u.view)) me.view = u.view;
+  } catch (e) {}
+})();
+let saveTimer;
+const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) { toast('保存に失敗しました'); } }, 150); };
+const curDay = () => EVENT.days.find(d => d.id === me.dayId) || EVENT.days[0];
+
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+
+/* ---------- 画面 ---------- */
+function renderAll() { renderHeader(); renderGrid(); tick(); }
+function renderHeader() {
+  const cd = curDay();
+  $('#dayTabs').innerHTML = EVENT.days.map(d => `<button data-day="${d.id}" class="${d.id === cd.id ? 'active' : ''}">${esc(d.label)}<small>${slash(d.date)}</small></button>`).join('');
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.v === me.view));
+  $('#hint').textContent = {
+    all: '見たい枠をタップで ✓（もう一度で解除）。点線のマイイベントはタップで編集。',
+    my: '✓をつけた枠とマイイベントだけを表示中。',
+    mine: '自分で登録したマイイベントだけを表示中。＋で追加。'
+  }[me.view];
+}
+$('#dayTabs').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { me.dayId = b.dataset.day; save(); renderAll(); } });
+$('#viewSeg').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) { me.view = b.dataset.v; save(); renderAll(); } });
+
+// opts.flat = 画像用（現在時刻線・スクロール固定なし）
+function gridHTML(opts = {}) {
+  const cd = curDay(), view = me.view;
+  const slots = view === 'mine' ? [] : SLOTS.filter(s => s.dayId === cd.id && (view === 'all' || me.my.includes(s.id)));
+  const mine = view === 'all' || view === 'my' || view === 'mine' ? me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start)) : [];
+  if (!slots.length && !mine.length) {
+    const msg = view === 'mine' ? 'この日のマイイベントはまだありません。＋から追加できます。' : '「すべて」で見たい枠をタップするか、＋でマイイベントを追加してください。';
+    return `<p class="empty">${esc(cd.label)}：${msg}</p>`;
+  }
+  const mEnd = c => c.end ? endMin(c.start, c.end) : toMin(c.start) + 20;
+  // 短い予定もブロックの最小の高さぶんは枠内に収める（深夜帯の見切れ対策）
+  const VMIN = Math.ceil(30 / PX);
+  let min = Infinity, max = -Infinity;
+  slots.forEach(s => { min = Math.min(min, toMin(s.start)); max = Math.max(max, endMin(s.start, s.end), toMin(s.start) + VMIN); });
+  mine.forEach(c => { min = Math.min(min, toMin(c.start)); max = Math.max(max, mEnd(c), toMin(c.start) + VMIN); });
+  min = Math.floor(min / 60) * 60; max = Math.ceil(max / 60) * 60;
+  const showStage = slots.length > 0, showMine = mine.length > 0 || view === 'all';
+  const cols = (showStage ? 1 : 0) + (showMine && mine.length ? 1 : 0) || 1;
+  let h = `<div class="grid-inner" style="--cols:${cols}"><div class="g-head"><div class="g-corner"></div>`;
+  if (showStage) h += `<div class="g-stage" style="--c:${STAGE.color}">${esc(STAGE.name)}</div>`;
+  if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">マイイベント</div>';
+  h += `</div><div class="g-body" style="height:${(max - min) * PX + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
+  for (let t = min; t <= max; t += 60) h += `<div class="g-time" style="top:${(t - min) * PX + 4}px">${fmt(t)}</div>`;
+  h += '</div>';
+  let nowTop = null;
+  if (!opts.flat && cd.date === todayStr()) { const d = new Date(), n = d.getHours() * 60 + d.getMinutes(); if (n >= min && n <= max) nowTop = (n - min) * PX + 4; }
+  const col = () => {
+    let c = '<div class="g-col">';
+    for (let t = min; t <= max; t += 30) c += `<div class="g-line ${t % 60 ? 'half' : ''}" style="top:${(t - min) * PX + 4}px"></div>`;
+    if (nowTop !== null) c += `<div class="now-line" style="top:${nowTop}px"></div>`;
+    return c;
+  };
+  if (showStage) {
+    h += col();
+    slots.forEach(s => {
+      const a = toMin(s.start), b = endMin(s.start, s.end), on = me.my.includes(s.id);
+      h += `<button class="slot ${on ? 'on' : ''}" data-id="${s.id}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
+        + `<span class="t">${s.start}–${s.end}</span><span class="n">${esc(s.title)}</span></button>`;
+    });
+    h += '</div>';
+  }
+  if (mine.length) {
+    h += col();
+    mine.forEach(c => {
+      const a = toMin(c.start), b = mEnd(c);
+      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px">`
+        + `<span class="t">${c.start}${c.end ? '–' + c.end : ''}</span><span class="n">${esc(c.title)}</span>${c.place ? `<span class="pl">📍${esc(c.place)}</span>` : ''}${c.note && !opts.flat ? '<span class="memo-dot">📝</span>' : ''}</div>`;
+    });
+    h += '</div>';
+  }
+  return h + '</div></div>';
+}
+// 描画後の調整：
+// ① 時間が本当に重なる予定だけ横に並べる
+// ② 短くて入りきらないカードは、まず1行にまとめた表示（compact）にする
+// ③ それでも入らなければ中身が全部見える高さまで伸ばし、下の予定にかぶる分だけ下へずらす
+function layoutGrid(root) {
+  root.querySelectorAll('.g-body').forEach(body => {
+    let maxBottom = 0;
+    body.querySelectorAll('.g-col').forEach(col => {
+      const cards = [...col.querySelectorAll('.slot')].map(el => ({ el, top: parseFloat(el.style.top), dur: Math.max(parseFloat(el.dataset.h) || 0, 0), real: (parseFloat(el.dataset.h) || 0) + 2 }))
+        .sort((a, b) => a.top - b.top || b.dur - a.dur);
+      for (let i = 0; i < cards.length;) {
+        let j = i, end = cards[i].top + cards[i].real;
+        while (j + 1 < cards.length && cards[j + 1].top < end - 1) { j++; end = Math.max(end, cards[j].top + cards[j].real); }
+        const group = cards.slice(i, j + 1), lanes = [];
+        group.forEach(c => { let l = lanes.findIndex(b => b <= c.top + 1); if (l < 0) { l = lanes.length; lanes.push(0); } lanes[l] = c.top + c.real; c.lane = l; });
+        group.forEach(c => { c.n = lanes.length; });
+        i = j + 1;
+      }
+      cards.forEach(c => {
+        const w = 100 / c.n; c.x0 = c.lane * w; c.x1 = c.x0 + w;
+        Object.assign(c.el.style, { left: `calc(${c.x0}% + 3px)`, width: `calc(${w}% - 6px)`, right: 'auto', height: 'auto' });
+        c.el.classList.remove('compact');
+        let need = c.el.offsetHeight;
+        if (need > c.dur) { c.el.classList.add('compact'); need = c.el.offsetHeight; }
+        c.h = Math.max(c.dur, need); c.el.style.height = c.h + 'px';
+      });
+      const placed = [];
+      cards.forEach(c => {
+        let y = c.top, hit;
+        while ((hit = placed.find(p => p.x0 < c.x1 - .01 && c.x0 < p.x1 - .01 && y < p.y + p.h + 2 && p.y < y + c.h))) y = hit.y + hit.h + 2;
+        c.y = y; c.el.style.top = y + 'px'; placed.push(c);
+        maxBottom = Math.max(maxBottom, y + c.h);
+      });
+    });
+    const h = parseFloat(body.style.height); if (maxBottom + 8 > h) body.style.height = (maxBottom + 8) + 'px';
+  });
+}
+function renderGrid() {
+  const wrap = $('#grid'), old = wrap.querySelector('.grid-wrap'), sx = old ? old.scrollLeft : 0, sy = old ? old.scrollTop : 0;
+  const inner = gridHTML();
+  wrap.innerHTML = inner.startsWith('<p') ? inner : `<div class="grid-wrap">${inner}</div>`;
+  layoutGrid(wrap);
+  const nw = wrap.querySelector('.grid-wrap'); if (nw) { nw.scrollLeft = sx; nw.scrollTop = sy; }
+}
+$('#grid').addEventListener('click', e => {
+  const b = e.target.closest('.slot'); if (!b) return;
+  if (b.dataset.cid) return openForm(b.dataset.cid);
+  const i = me.my.indexOf(b.dataset.id);
+  if (i >= 0) me.my.splice(i, 1); else me.my.push(b.dataset.id);
+  save(); renderGrid(); tick();
+});
+
+/* ---------- マイイベントの追加・編集 ---------- */
+let editingId = null;
+function openForm(id) {
+  const c = id ? me.custom.find(x => x.id === id) : null;
+  editingId = c ? c.id : null;
+  const d = c ? EVENT.days.find(x => x.id === c.dayId) : curDay();
+  $('#fHead').textContent = c ? 'マイイベントを編集' : 'マイイベントを追加';
+  $('#fDay').textContent = `${d.label}（${slash(d.date)}）の予定`;
+  $('#cTitle').value = c ? c.title : ''; $('#cPlace').value = c ? c.place : '';
+  $('#cStart').value = c ? c.start : ''; $('#cEnd').value = c ? c.end : ''; $('#cNote').value = c ? c.note : '';
+  $('#cSave').textContent = c ? '更新' : '追加'; $('#cDel').style.display = c ? '' : 'none';
+  $('#placeList').innerHTML = [...new Set(me.custom.map(x => x.place).filter(Boolean))].map(p => `<option value="${esc(p)}">`).join('');
+  checkClash();
+  $('#formModal').classList.add('show');
+  if (!c) setTimeout(() => $('#cTitle').focus(), 50);
+}
+const closeForm = () => { $('#formModal').classList.remove('show'); editingId = null; };
+// 選んだ枠・他のマイイベントとの時間の被りを表示
+function checkClash() {
+  const s = normTime($('#cStart').value), e = normTime($('#cEnd').value), w = $('#fWarn');
+  if (!s || !e) { w.textContent = ''; return; }
+  const dayId = editingId ? me.custom.find(x => x.id === editingId).dayId : curDay().id;
+  const a = toMin(s), b = endMin(s, e);
+  const hits = [
+    ...SLOTS.filter(x => x.dayId === dayId && me.my.includes(x.id)),
+    ...me.custom.filter(x => x.dayId === dayId && x.end && x.id !== editingId)
+  ].filter(x => a < endMin(x.start, x.end) && toMin(x.start) < b).map(x => x.title);
+  w.textContent = hits.length ? `⚠ 「${hits.join('」「')}」と時間が被っています` : '';
+}
+['#cStart', '#cEnd'].forEach(s => $(s).addEventListener('change', checkClash));
+$('#addBtn').addEventListener('click', () => openForm(null));
+$('#cCancel').addEventListener('click', closeForm);
+$('#formModal').addEventListener('click', e => { if (e.target.id === 'formModal') closeForm(); });
+$('#cSave').addEventListener('click', () => {
+  const start = normTime($('#cStart').value), title = $('#cTitle').value.trim();
+  if (!title || !start) return toast('イベント名と開始時刻を入れてください');
+  const data = { start, end: normTime($('#cEnd').value) || '', title: title.slice(0, 100), place: $('#cPlace').value.trim().slice(0, 100), note: $('#cNote').value.slice(0, 2000) };
+  const c = editingId && me.custom.find(x => x.id === editingId);
+  if (c) Object.assign(c, data); else me.custom.push({ id: uid(), dayId: curDay().id, ...data });
+  toast(c ? '更新しました' : '追加しました');
+  closeForm(); save(); renderGrid(); tick();
+});
+$('#cDel').addEventListener('click', () => {
+  if (!editingId || !confirm('このマイイベントを削除しますか？')) return;
+  me.custom = me.custom.filter(c => c.id !== editingId);
+  closeForm(); save(); renderGrid(); tick(); toast('削除しました');
+});
+
+/* ---------- カウントダウン ---------- */
+function myItems() {
+  const items = SLOTS.filter(s => me.my.includes(s.id)).map(s => ({ ...s, place: '' }));
+  me.custom.forEach(c => items.push(c));
+  return items.map(it => {
+    const d = EVENT.days.find(x => x.id === it.dayId), s = absTime(d.date, it.start);
+    return { it, label: d.label, date: d.date, s, e: it.end ? s + (endMin(it.start, it.end) - toMin(it.start)) * 60000 : s };
+  }).sort((a, b) => a.s - b.s);
+}
+function dur(ms) { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${pad(m)}:${pad(s % 60)}`; }
+function tick() {
+  const items = myItems(), now = Date.now(), box = $('#countdown'), today = todayStr();
+  const first = EVENT.days[0].date, last = EVENT.days[EVENT.days.length - 1].date;
+  const todayDay = EVENT.days.find(d => d.date === today);
+  const pl = it => it.place ? `（📍${esc(it.place)}）` : '';
+  let html = '';
+  if (today < first) html += `<div>イベントまで あと <b>${Math.round((absTime(first, '00:00') - absTime(today, '00:00')) / 86400000)}日</b></div>`;
+  else if (todayDay) html += `<div>🎉 本日 <b>${esc(todayDay.label)}</b>（${slash(today)}）</div>`;
+  const current = items.filter(x => now >= x.s && now < x.e), next = items.find(x => x.s > now);
+  if (current.length) html += `<div class="now">▶ 今：${current.map(x => esc(x.it.title) + pl(x.it)).join(' / ')}（〜${esc(current[0].it.end)}）</div>`;
+  if (next) {
+    const diff = next.s - now;
+    html += diff > 43200000
+      ? `<div>次：${esc(next.label)} ${slash(next.date)} ${next.it.start} ${esc(next.it.title)}${pl(next.it)}</div>`
+      : `<div>次：${esc(next.label)} ${next.it.start} ${esc(next.it.title)}${pl(next.it)} まで <b>${dur(diff)}</b></div>`;
+  } else if (items.length && !current.length && today >= last) html += '<div>予定はすべて終了しました。おつかれさまでした！</div>';
+  box.innerHTML = html; box.classList.toggle('show', !!html);
+}
+setInterval(tick, 1000);
+setInterval(renderGrid, 60000);
+
+/* ---------- 画像で保存 ---------- */
+let lastBlob = null, lastName = '';
+const canShareFile = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([new Blob()], 'a.png', { type: 'image/png' })] })); } catch (_) { return false; } };
+$('#imgBtn').addEventListener('click', async () => {
+  if (!window.html2canvas) return toast('画像ライブラリを読み込めませんでした。通信状況を確認してください');
+  const inner = gridHTML({ flat: true });
+  if (inner.startsWith('<p')) return toast('画像にする予定がありません');
+  const cd = curDay(), kind = { all: 'タイムテーブル', my: 'マイタイテ', mine: 'マイイベント' }[me.view];
+  const area = $('#exportArea');
+  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　${kind}</div>${inner}</div>`;
+  layoutGrid(area);
+  toast('画像を作成中…');
+  try {
+    const el = area.firstElementChild;
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: getComputedStyle(document.body).backgroundColor, logging: false, windowWidth: Math.max(el.scrollWidth + 40, 480) });
+    lastBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    lastName = `ファンフェス_${cd.label}_${kind}.png`;
+    $('#imgPreview').src = URL.createObjectURL(lastBlob);
+    $('#imgShare').style.display = canShareFile() ? '' : 'none';
+    $('#imgModal').classList.add('show');
+  } catch (err) { console.error(err); toast('画像の作成に失敗しました'); }
+  finally { area.innerHTML = ''; }
+});
+$('#imgClose').addEventListener('click', () => $('#imgModal').classList.remove('show'));
+$('#imgModal').addEventListener('click', e => { if (e.target.id === 'imgModal') $('#imgModal').classList.remove('show'); });
+$('#imgDl').addEventListener('click', () => {
+  if (!lastBlob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(lastBlob); a.download = lastName;
+  document.body.appendChild(a); a.click(); a.remove();
+});
+$('#imgShare').addEventListener('click', async () => {
+  if (!lastBlob) return;
+  try { await navigator.share({ files: [new File([lastBlob], lastName, { type: 'image/png' })], title: EVENT.name }); } catch (_) {}
+});
+
+renderAll();
+})();
+</script>
+</body>
+</html>
