@@ -71,8 +71,6 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .empty{color:var(--muted);text-align:center;padding:32px 12px;background:var(--surface);border-radius:var(--radius)}
 .empty .btns{justify-content:center;margin-top:12px}
-.seg button .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:99px;background:var(--accent);color:var(--accent-text);font-size:11px;line-height:18px;vertical-align:1px}
-.seg button .badge:empty{display:none}
 /* はじめての案内 */
 .intro{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border-left:4px solid var(--accent);padding:12px 14px;margin-top:12px;font-size:13.5px}
 .intro ol{margin:6px 0 10px;padding-left:20px}
@@ -96,7 +94,6 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .cc-card .st{font-size:11px;color:var(--ok);font-weight:600;font-variant-numeric:tabular-nums}
 .tbtn{margin-top:auto;align-self:flex-start;flex:none;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:99px;padding:4px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 /* マイタイテ */
-.my-bar{display:flex;justify-content:flex-end;margin:0 0 8px}
 .wants{display:flex;flex-direction:column;gap:6px}
 .want{display:flex;align-items:center;gap:8px;background:var(--surface);border-left:4px solid var(--c);border-radius:8px;padding:8px 6px 8px 10px;box-shadow:var(--shadow)}
 .want .n{font-size:13px;font-weight:700;line-height:1.35;word-break:break-word}
@@ -154,6 +151,14 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .ex-grid{padding:16px;background:var(--surface);width:420px}
 .ex-grid h3{margin:0 0 4px;font-size:18px}
 .ex-grid .d{color:var(--muted);font-size:12px;margin-bottom:10px}
+.slot.tile{color:var(--text);border-left:4px solid var(--c)}
+.slot.tile.free{border:1.5px dashed var(--c);border-left:4px solid var(--c)}
+.slot.tile .pl{font-size:10.5px;color:var(--muted);word-break:break-word}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0 0 8px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend span::before{content:"";width:12px;height:12px;border-radius:3px;background:var(--c)}
+.my-bar{display:flex;align-items:flex-start;gap:8px;margin:0 0 8px}
+.my-bar .legend{flex:1;margin:6px 0 0}
 .slot .mk{position:absolute;top:2px;right:5px;font-size:14px;font-weight:800;opacity:.5}
 .slot.has-mk .n{padding-right:12px}
 .toast.act{pointer-events:auto}
@@ -169,7 +174,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
     <div class="title-row"><h1 id="evTitle">FF14 ファンフェス マイタイテ</h1></div>
     <div class="countdown" id="countdown"></div>
     <div class="seg" id="viewSeg">
-      <button data-v="stage">ステージ</button><button data-v="contents">会場コンテンツ</button><button data-v="my">マイタイテ<span class="badge" id="myCount"></span></button>
+      <button data-v="stage">ステージ</button><button data-v="contents">会場コンテンツ</button><button data-v="my">マイタイテ</button>
     </div>
   </header>
 
@@ -318,6 +323,7 @@ const VENUES = [...new Set(PRESET_LIST.map(p => p[1]))];
 const pKey = p => p[0] + '@' + p[1];
 // 公式サイトのアクセス・周辺マップ
 const MAP_URL = 'https://fanfest.finalfantasyxiv.com/2026/jp/about/';
+const FREE_COLOR = '#8a877f'; // ほかの予定（自由入力）
 const CAT_COLOR = { 'アクティビティ': '#3b82c4', '展示': '#8e6cc8', 'グッズ': '#d0688f', 'フード': '#2e8b57' };
 
 /* ---------- 自分のデータ（この端末のブラウザに保存） ----------
@@ -397,7 +403,6 @@ function renderHeader() {
   // 会場コンテンツは日にちに関係ないので日付タブを隠す
   $('#dayTabs').style.display = me.view === 'contents' ? 'none' : '';
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.v === me.view));
-  $('#myCount').textContent = me.my.length + me.custom.length + me.wants.length || '';
   $('#intro').hidden = me.introDone;
   $('#hint').textContent = {
     stage: '見たい枠をタップでマイタイテに追加。もう一度タップで外せます。',
@@ -423,53 +428,51 @@ $('#introOk').addEventListener('click', () => { me.introDone = true; save(); ren
 // opts.fit = 画像用：表の本体をおおよそこの高さ(px)に縮める
 function gridHTML(mode, opts = {}) {
   const cd = curDay();
-  const slots = SLOTS.filter(s => s.dayId === cd.id && (mode === 'stage' || me.my.includes(s.id)));
-  const mine = mode === 'my' ? me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start)) : [];
-  if (!slots.length && !mine.length) return '';
-  const mEnd = c => c.end ? endMin(c.start, c.end) : toMin(c.start) + 20;
+  // 表に並べる予定。マイタイテでは ✓したステージ枠と時間を決めた予定を1列にまとめる
+  const items = SLOTS.filter(s => s.dayId === cd.id && (mode === 'stage' || me.my.includes(s.id))).map(s => ({ kind: 'stage', s, start: s.start, end: s.end, title: s.title, color: STAGE.color }));
+  if (mode === 'my') me.custom.filter(c => c.dayId === cd.id).forEach(c => {
+    const p = presetOf(c);
+    items.push({ kind: p ? 'content' : 'free', c, start: c.start, end: c.end, title: c.title, color: p ? catColor(p) : FREE_COLOR });
+  });
+  if (!items.length) return '';
+  items.sort((a, b) => toMin(a.start) - toMin(b.start));
+  const iEnd = it => it.end ? endMin(it.start, it.end) : toMin(it.start) + 20;
   // 短い予定もブロックの最小の高さぶんは枠内に収める（深夜帯の見切れ対策）
   const VMIN = Math.ceil(30 / PX);
   let min = Infinity, max = -Infinity;
-  slots.forEach(s => { min = Math.min(min, toMin(s.start)); max = Math.max(max, endMin(s.start, s.end), toMin(s.start) + VMIN); });
-  mine.forEach(c => { min = Math.min(min, toMin(c.start)); max = Math.max(max, mEnd(c), toMin(c.start) + VMIN); });
+  items.forEach(it => { min = Math.min(min, toMin(it.start)); max = Math.max(max, iEnd(it), toMin(it.start) + VMIN); });
   min = Math.floor(min / 60) * 60; max = Math.ceil(max / 60) * 60;
   // opts.fit = 表の本体をこの高さ(px)に収めたいとき（画像用）。縮めすぎない下限つき
   const px = opts.fit ? Math.min(PX, Math.max(0.7, opts.fit / (max - min))) : PX;
-  const showStage = slots.length > 0;
-  const cols = (showStage ? 1 : 0) + (mine.length ? 1 : 0) || 1;
-  let h = `<div class="grid-inner" style="--cols:${cols}"><div class="g-head"><div class="g-corner"></div>`;
-  if (showStage) h += `<div class="g-stage" style="--c:${STAGE.color}">${esc(STAGE.name)}</div>`;
-  if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">会場・ほかの予定</div>';
-  h += `</div><div class="g-body" style="height:${(max - min) * px + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
+  const headColor = mode === 'stage' ? STAGE.color : 'var(--accent)';
+  let h = `<div class="grid-inner" style="--cols:1"><div class="g-head"><div class="g-corner"></div><div class="g-stage" style="--c:${headColor}">${mode === 'stage' ? esc(STAGE.name) : 'マイタイテ'}</div></div>`;
+  h += `<div class="g-body" style="height:${(max - min) * px + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
   for (let t = min; t <= max; t += 60) h += `<div class="g-time" style="top:${(t - min) * px + 4}px">${fmt(t)}</div>`;
-  h += '</div>';
-  let nowTop = null;
-  if (!opts.flat && cd.date === todayStr()) { const d = new Date(), n = d.getHours() * 60 + d.getMinutes(); if (n >= min && n <= max) nowTop = (n - min) * px + 4; }
-  const col = () => {
-    let c = '<div class="g-col">';
-    for (let t = min; t <= max; t += 30) c += `<div class="g-line ${t % 60 ? 'half' : ''}" style="top:${(t - min) * px + 4}px"></div>`;
-    if (nowTop !== null) c += `<div class="now-line" style="top:${nowTop}px"></div>`;
-    return c;
-  };
-  if (showStage) {
-    h += col();
-    slots.forEach(s => {
-      const a = toMin(s.start), b = s.end ? endMin(s.start, s.end) : a + 20, on = me.my.includes(s.id);
-      h += `<button class="slot ${on ? 'on' : 'has-mk'}" data-id="${s.id}" data-h="${(b - a) * px - 2}" style="top:${(a - min) * px + 5}px;height:${(b - a) * px - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
-        + `<span class="t">${s.start}${s.end ? '–' + s.end : ''}</span><span class="n">${esc(s.title)}</span>${on ? '' : '<span class="mk">＋</span>'}</button>`;
-    });
-    h += '</div>';
-  }
-  if (mine.length) {
-    h += col();
-    mine.forEach(c => {
-      const a = toMin(c.start), b = mEnd(c), p = presetOf(c);
-      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * px - 2}" style="top:${(a - min) * px + 5}px;height:${(b - a) * px - 2}px${p ? `;border-left-color:${catColor(p)}` : ''}">`
-        + `<span class="t">${c.start}${c.end ? '–' + c.end : ''}</span><span class="n">${esc(c.title)}</span>${c.place ? `<span class="pl">📍${esc(c.place)}</span>` : ''}${c.note && !opts.flat ? '<span class="memo-dot">📝</span>' : ''}</div>`;
-    });
-    h += '</div>';
-  }
-  return h + '</div></div>';
+  h += '</div><div class="g-col">';
+  for (let t = min; t <= max; t += 30) h += `<div class="g-line ${t % 60 ? 'half' : ''}" style="top:${(t - min) * px + 4}px"></div>`;
+  if (!opts.flat && cd.date === todayStr()) { const d = new Date(), n = d.getHours() * 60 + d.getMinutes(); if (n >= min && n <= max) h += `<div class="now-line" style="top:${(n - min) * px + 4}px"></div>`; }
+  items.forEach(it => {
+    const a = toMin(it.start), b = iEnd(it), pos = `data-h="${(b - a) * px - 2}" style="top:${(a - min) * px + 5}px;height:${(b - a) * px - 2}px;--c:${it.color};`;
+    const time = `<span class="t">${it.start}${it.end ? '–' + it.end : ''}</span><span class="n">${esc(it.title)}</span>`;
+    if (mode === 'stage') {
+      const on = me.my.includes(it.s.id);
+      h += `<button class="slot ${on ? 'on' : 'has-mk'}" data-id="${it.s.id}" ${pos}background:${on ? it.color : hexA(it.color, .16)}">${time}${on ? '' : '<span class="mk">＋</span>'}</button>`;
+    } else if (it.kind === 'stage') {
+      h += `<button class="slot tile" data-id="${it.s.id}" ${pos}background:${hexA(it.color, .22)}">${time}</button>`;
+    } else {
+      const c = it.c;
+      h += `<div class="slot tile ${it.kind}" data-cid="${esc(c.id)}" ${pos}background:${hexA(it.color, .16)}">${time}${c.place ? `<span class="pl">📍${esc(c.place)}</span>` : ''}${c.note && !opts.flat ? '<span class="memo-dot">📝</span>' : ''}</div>`;
+    }
+  });
+  return h + '</div></div></div>';
+}
+// マイタイテの色の見分け（その日にある種類だけ表示）
+function legendHTML() {
+  const cd = curDay(), kinds = new Set();
+  if (SLOTS.some(s => s.dayId === cd.id && me.my.includes(s.id))) kinds.add('ステージ');
+  me.custom.filter(c => c.dayId === cd.id).forEach(c => { const p = presetOf(c); kinds.add(p ? Object.keys(PRESETS).find(cat => PRESETS[cat].includes(p)) : 'ほかの予定'); });
+  const all = [['ステージ', STAGE.color], ...Object.keys(PRESETS).map(k => [k, CAT_COLOR[k]]), ['ほかの予定', FREE_COLOR]].filter(([k]) => kinds.has(k));
+  return all.length ? `<div class="legend">${all.map(([k, c]) => `<span style="--c:${c}">${esc(k)}</span>`).join('')}</div>` : '';
 }
 // 描画後の調整：
 // ① 時間が本当に重なる予定だけ横に並べる
@@ -516,7 +519,7 @@ function renderGrid() {
   if (me.view === 'stage') wrap.innerHTML = grid;
   else {
     const empty = `<div class="empty">${esc(curDay().label)} の予定はまだありません。<div class="btns"><button class="btn" data-go="stage">ステージから選ぶ</button><button class="btn" data-go="contents">会場コンテンツから選ぶ</button></div></div>`;
-    wrap.innerHTML = (inner || me.wants.length ? '<div class="my-bar"><button class="btn" data-act="img">⤓ 画像で保存</button></div>' : '')
+    wrap.innerHTML = (inner || me.wants.length ? `<div class="my-bar">${legendHTML() || '<div class="legend"></div>'}<button class="btn" data-act="img">⤓ 画像で保存</button></div>` : '')
       + (grid || empty) + wantsHTML();
   }
   layoutGrid(wrap);
@@ -598,9 +601,12 @@ const closeForm = () => { $('#formModal').classList.remove('show'); editingId = 
 // ✓した枠・他の予定との時間の被りを表示
 function checkClash() {
   const s = normTime($('#cStart').value), e = normTime($('#cEnd').value), w = $('#fWarn');
+  $('#cEnd').min = s || '';
   if (!s || !e) { w.textContent = ''; return; }
+  // 1日の中の予定だけなので、終了は開始より後でないといけない
+  if (toMin(e) <= toMin(s)) { w.textContent = '⚠ 終了は開始より後の時刻にしてください'; return; }
   const dayId = formDayId;
-  const a = toMin(s), b = endMin(s, e);
+  const a = toMin(s), b = toMin(e);
   const hits = [
     ...SLOTS.filter(x => x.dayId === dayId && me.my.includes(x.id)),
     ...me.custom.filter(x => x.dayId === dayId && x.end && x.id !== editingId)
@@ -615,7 +621,9 @@ $('#cSave').addEventListener('click', () => {
   const title = pre ? pre[0] : $('#cTitle').value.trim(), place = pre ? pre[1] : $('#cPlace').value.trim();
   if (!title) return toast('予定の名前を入れてください');
   if (!start) return toast('開始時刻を選んでください');
-  const data = { dayId: formDayId, start, end: normTime($('#cEnd').value) || '', title: title.slice(0, 100), place: place.slice(0, 100), note: $('#cNote').value.slice(0, 2000) };
+  const end = normTime($('#cEnd').value) || '';
+  if (end && toMin(end) <= toMin(start)) return toast('終了は開始より後の時刻にしてください');
+  const data = { dayId: formDayId, start, end, title: title.slice(0, 100), place: place.slice(0, 100), note: $('#cNote').value.slice(0, 2000) };
   const id = editingId;
   closeForm();
   change(() => {
@@ -673,7 +681,7 @@ async function exportImage() {
   if (!inner && !wants.length) return toast('画像にする予定がありません');
   const cd = curDay();
   const area = $('#exportArea');
-  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　マイタイテ</div>${inner}`
+  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　マイタイテ</div>${legendHTML()}${inner}`
     + (wants.length ? `<div class="ex-wants"><h4>やりたいこと（時間未定）</h4><ul>${wants.map(p => `<li>${esc(p[0])}（${esc(p[1])}）</li>`).join('')}</ul></div>` : '') + '</div>';
   layoutGrid(area);
   toast('画像を作成中…');
