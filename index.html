@@ -45,11 +45,11 @@ header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 4px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 .hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
-input,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 textarea{resize:vertical;min-height:40px}
 input[type=time]{min-width:0}
 label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
-label.f > input,label.f > textarea{margin-top:2px}
+label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .row{display:flex;gap:8px;align-items:center}
 .row > *{min-width:0}
 .grow{flex:1}
@@ -131,8 +131,9 @@ label.f > input,label.f > textarea{margin-top:2px}
   <div class="box">
     <h2 id="fHead">マイイベントを追加</h2>
     <p class="hint" id="fDay"></p>
+    <label class="f">会場のコンテンツから選ぶ<select id="cPreset"></select></label>
     <label class="f">イベント名<input type="text" id="cTitle" placeholder="例：お昼ごはん"></label>
-    <label class="f">場所<input type="text" id="cPlace" list="placeList" placeholder="例：フードエリア"></label>
+    <label class="f">場所<input type="text" id="cPlace" list="placeList" placeholder="例：幕張メッセ"></label>
     <datalist id="placeList"></datalist>
     <div class="row">
       <label class="f grow">開始<input type="time" id="cStart"></label>
@@ -201,6 +202,54 @@ add('d2', '13:50', '15:00', 'ミラプリコレクション');
 add('d2', '15:30', '17:30', '直樹の部屋');
 add('d2', '19:30', '20:30', 'THE PRIMALSライブ');
 add('d2', '20:30', '21:00', 'エンディング');
+
+/* ---------- 会場のコンテンツ（マイイベントの選択肢。選ぶと名前と場所が入る） ---------- */
+const PRESETS = {
+  'アクティビティ': [
+    ['ファイナルファンタジーXIV：チョコボレースVR', '幕張メッセ'],
+    ['エッダの鞄', '幕張メッセ'],
+    ['YOKERO -エターナルクイーン討滅戦-', '幕張メッセ'],
+    ['ダンシング・グリーンと踊ろう！ （Ver.1.0）', '幕張メッセ'],
+    ['リアル謎解きゲーム（新作）', 'イオンモール'],
+    ['カード体験＆展示ブース', '幕張メッセ'],
+    ['instax™“チェキ”での撮影・プリント体験', '幕張メッセ'],
+    ['ドマ式麻雀 修練場', '幕張メッセ'],
+    ['エオルゼア検定～読んで…… 答えて…… 見直して…… ～', '幕張メッセ'],
+    ['ナイスヘッド・ガーデン', '幕張メッセ'],
+    ['古のアラグの操作盤', '幕張メッセ'],
+    ['F.A.T.E.『スペースインベーダー ギガマックス ：トライヨラの民を守れ！』', '幕張メッセ'],
+    ['『だいたい合ってるNPC名鑑 ＜新生エオルゼア編＞』体験コーナー', '幕張メッセ'],
+    ['ファイナルファンタジー・トレーディングカード 体験コーナー', '幕張メッセ'],
+    ['フォトスポット：でぶチョコボ', 'イオンモール'],
+    ['フォトスポット', '幕張メッセ'],
+    ['メッセージボード', '幕張メッセ'],
+    ['みんなでつくる！ファンフェス来場者マップ', '幕張メッセ'],
+    ['シュガーライオットのアトリエボード', '幕張メッセ']
+  ],
+  '展示': [
+    ['ファイナルファンタジーVII リメイクシリーズ', '幕張メッセ'],
+    ['ディシディア デュエルム ファイナルファンタジー', '幕張メッセ'],
+    ['ファイナルファンタジー レゾナンス', '幕張メッセ'],
+    ['GALLERIAコラボモデル', '幕張メッセ'],
+    ['ファイナルファンタジーXIV推奨モニター「GigaCrysta」', '幕張メッセ']
+  ],
+  'グッズ': [
+    ['ナインズ・キャッチャー', '幕張メッセ'],
+    ['リアルトレジャーハント', '幕張メッセ'],
+    ['至天の座アルカディアくじ', '幕張メッセ'],
+    ['めざせマイスター！クラフトマンズワークショップ', '幕張メッセ'],
+    ['ジョブイメージオードパルファム テスター＆販売', '幕張メッセ'],
+    ['オフィシャルグッズ販売', '幕張メッセ'],
+    ['POP UP STORE', 'イオンモール']
+  ],
+  'フード': [
+    ['出張エオルゼアカフェ', '豊砂公園'],
+    ['アニメイトカフェ 出張版 in FFXIVファンフェス', '豊砂公園'],
+    ['キッチンカー', '豊砂公園']
+  ]
+};
+const PRESET_LIST = Object.values(PRESETS).flat();
+const VENUES = [...new Set(PRESET_LIST.map(p => p[1]))];
 
 /* ---------- 自分のデータ（この端末のブラウザに保存） ---------- */
 const me = { my: [], custom: [], dayId: 'd1', view: 'all' };
@@ -353,11 +402,27 @@ function openForm(id) {
   $('#cTitle').value = c ? c.title : ''; $('#cPlace').value = c ? c.place : '';
   $('#cStart').value = c ? c.start : ''; $('#cEnd').value = c ? c.end : ''; $('#cNote').value = c ? c.note : '';
   $('#cSave').textContent = c ? '更新' : '追加'; $('#cDel').style.display = c ? '' : 'none';
-  $('#placeList').innerHTML = [...new Set(me.custom.map(x => x.place).filter(Boolean))].map(p => `<option value="${esc(p)}">`).join('');
+  $('#placeList').innerHTML = [...new Set([...VENUES, ...me.custom.map(x => x.place).filter(Boolean)])].map(p => `<option value="${esc(p)}">`).join('');
+  syncPreset();
   checkClash();
   $('#formModal').classList.add('show');
-  if (!c) setTimeout(() => $('#cTitle').focus(), 50);
 }
+// 会場コンテンツの選択肢（カテゴリごと）
+$('#cPreset').innerHTML = '<option value="">（自由入力）</option>' + Object.entries(PRESETS).map(([cat, list]) =>
+  `<optgroup label="${esc(cat)}">${list.map(([t, p]) => `<option value="${PRESET_LIST.findIndex(x => x[0] === t && x[1] === p)}">${esc(t)}（${esc(p)}）</option>`).join('')}</optgroup>`).join('');
+// 名前・場所が選択肢と一致していればその項目を選択状態にする
+const syncPreset = () => {
+  const t = $('#cTitle').value.trim(), p = $('#cPlace').value.trim();
+  const i = PRESET_LIST.findIndex(x => x[0] === t && x[1] === p);
+  $('#cPreset').value = i >= 0 ? String(i) : '';
+};
+$('#cPreset').addEventListener('change', e => {
+  const p = PRESET_LIST[+e.target.value];
+  if (!p) return;
+  $('#cTitle').value = p[0]; $('#cPlace').value = p[1];
+  if (!$('#cStart').value) $('#cStart').focus();
+});
+['#cTitle', '#cPlace'].forEach(s => $(s).addEventListener('input', syncPreset));
 const closeForm = () => { $('#formModal').classList.remove('show'); editingId = null; };
 // 選んだ枠・他のマイイベントとの時間の被りを表示
 function checkClash() {
