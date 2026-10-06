@@ -58,6 +58,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
 .btn.danger{color:var(--warn)}
 .btn.icon{padding:8px 11px;flex:none;min-width:40px;display:flex;align-items:center;justify-content:center}
+#addBtn{min-width:64px;font-size:18px;padding:6px 18px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .empty{color:var(--muted);text-align:center;padding:40px 8px;background:var(--surface);border-radius:var(--radius)}
 .warn{color:var(--warn);font-size:12.5px;font-weight:600;margin:-2px 0 8px}
@@ -117,7 +118,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 
   <div class="toolbar">
     <div class="seg grow" id="viewSeg">
-      <button data-v="all">すべて</button><button data-v="my">自分の予定</button><button data-v="mine">マイイベント</button>
+      <button data-v="all">すべて</button><button data-v="my">自分の予定</button>
     </div>
     <button class="btn primary icon" id="addBtn" aria-label="マイイベントを追加">＋</button>
     <button class="btn icon" id="imgBtn" aria-label="画像で保存" title="画像で保存"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
@@ -255,16 +256,30 @@ const VENUES = [...new Set(PRESET_LIST.map(p => p[1]))];
 const me = { my: [], custom: [], dayId: 'd1', view: 'all' };
 (function load() {
   try {
-    const u = JSON.parse(localStorage.getItem(KEY)); if (!u) return;
+    const u = JSON.parse(localStorage.getItem(KEY));
+    if (!u) return;
     const ids = new Set(SLOTS.map(s => s.id)), dids = new Set(EVENT.days.map(d => d.id));
     me.my = [...new Set((u.my || []).map(String).filter(id => ids.has(id)))];
     me.custom = (Array.isArray(u.custom) ? u.custom : []).filter(c => c && c.title && normTime(c.start)).map(c => ({
       id: String(c.id || uid()), dayId: dids.has(c.dayId) ? c.dayId : 'd1', start: normTime(c.start), end: normTime(c.end) || '',
       title: String(c.title).slice(0, 100), place: String(c.place || '').slice(0, 100), note: String(c.note || '').slice(0, 2000) }));
     if (dids.has(u.dayId)) me.dayId = u.dayId;
-    if (['all', 'my', 'mine'].includes(u.view)) me.view = u.view;
+    if (['all', 'my'].includes(u.view)) me.view = u.view;
+    // 旧形式（true）は Day1 のサンプルを入れ済み
+    me.sampled = Array.isArray(u.sampled) ? u.sampled.map(String) : u.sampled === true ? ['lunch-d1'] : [];
   } catch (e) {}
 })();
+// サンプルのマイイベントを各ブラウザに1回ずつだけ入れる（消しても復活しない）
+const SAMPLES = [
+  { key: 'lunch-d1', dayId: 'd1', start: '14:00', end: '15:00', title: 'お昼ごはん' },
+  { key: 'lunch-d2', dayId: 'd2', start: '14:00', end: '15:00', title: 'お昼ごはん' }
+];
+me.sampled = me.sampled || [];
+const newSamples = SAMPLES.filter(s => !me.sampled.includes(s.key));
+if (newSamples.length) {
+  newSamples.forEach(({ key, ...s }) => { me.custom.push({ id: uid(), place: '', note: '', ...s }); me.sampled.push(key); });
+  try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) {}
+}
 let saveTimer;
 const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) { toast('保存に失敗しました'); } }, 150); };
 const curDay = () => EVENT.days.find(d => d.id === me.dayId) || EVENT.days[0];
@@ -280,8 +295,7 @@ function renderHeader() {
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.v === me.view));
   $('#hint').textContent = {
     all: '見たい枠をタップで ✓（もう一度で解除）。点線のマイイベントはタップで編集。',
-    my: '✓をつけた枠とマイイベントだけを表示中。',
-    mine: '自分で登録したマイイベントだけを表示中。＋で追加。'
+    my: '✓をつけた枠とマイイベントだけを表示中。'
   }[me.view];
 }
 $('#dayTabs').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { me.dayId = b.dataset.day; save(); renderAll(); } });
@@ -290,11 +304,10 @@ $('#viewSeg').addEventListener('click', e => { const b = e.target.closest('butto
 // opts.flat = 画像用（現在時刻線・スクロール固定なし）
 function gridHTML(opts = {}) {
   const cd = curDay(), view = me.view;
-  const slots = view === 'mine' ? [] : SLOTS.filter(s => s.dayId === cd.id && (view === 'all' || me.my.includes(s.id)));
-  const mine = view === 'all' || view === 'my' || view === 'mine' ? me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start)) : [];
+  const slots = SLOTS.filter(s => s.dayId === cd.id && (view === 'all' || me.my.includes(s.id)));
+  const mine = me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start));
   if (!slots.length && !mine.length) {
-    const msg = view === 'mine' ? 'この日のマイイベントはまだありません。＋から追加できます。' : '「すべて」で見たい枠をタップするか、＋でマイイベントを追加してください。';
-    return `<p class="empty">${esc(cd.label)}：${msg}</p>`;
+    return `<p class="empty">${esc(cd.label)}：「すべて」で見たい枠をタップするか、＋でマイイベントを追加してください。</p>`;
   }
   const mEnd = c => c.end ? endMin(c.start, c.end) : toMin(c.start) + 20;
   // 短い予定もブロックの最小の高さぶんは枠内に収める（深夜帯の見切れ対策）
@@ -303,8 +316,8 @@ function gridHTML(opts = {}) {
   slots.forEach(s => { min = Math.min(min, toMin(s.start)); max = Math.max(max, endMin(s.start, s.end), toMin(s.start) + VMIN); });
   mine.forEach(c => { min = Math.min(min, toMin(c.start)); max = Math.max(max, mEnd(c), toMin(c.start) + VMIN); });
   min = Math.floor(min / 60) * 60; max = Math.ceil(max / 60) * 60;
-  const showStage = slots.length > 0, showMine = mine.length > 0 || view === 'all';
-  const cols = (showStage ? 1 : 0) + (showMine && mine.length ? 1 : 0) || 1;
+  const showStage = slots.length > 0;
+  const cols = (showStage ? 1 : 0) + (mine.length ? 1 : 0) || 1;
   let h = `<div class="grid-inner" style="--cols:${cols}"><div class="g-head"><div class="g-corner"></div>`;
   if (showStage) h += `<div class="g-stage" style="--c:${STAGE.color}">${esc(STAGE.name)}</div>`;
   if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">マイイベント</div>';
@@ -493,7 +506,7 @@ $('#imgBtn').addEventListener('click', async () => {
   if (!window.html2canvas) return toast('画像ライブラリを読み込めませんでした。通信状況を確認してください');
   const inner = gridHTML({ flat: true });
   if (inner.startsWith('<p')) return toast('画像にする予定がありません');
-  const cd = curDay(), kind = { all: 'タイムテーブル', my: 'マイタイテ', mine: 'マイイベント' }[me.view];
+  const cd = curDay(), kind = { all: 'タイムテーブル', my: 'マイタイテ' }[me.view];
   const area = $('#exportArea');
   area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　${kind}</div>${inner}</div>`;
   layoutGrid(area);
