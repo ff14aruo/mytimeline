@@ -61,6 +61,22 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 #addBtn{min-width:64px;font-size:18px;padding:6px 18px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .empty{color:var(--muted);text-align:center;padding:40px 8px;background:var(--surface);border-radius:var(--radius)}
+/* コンテンツ一覧 */
+.cc-filter{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.cc-filter button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.cc-filter button.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.cc-cat{font-size:14px;margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+.cc-cat::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+.cc-cat small{color:var(--muted);font-weight:400}
+.cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.cc-card{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:10px 10px 8px;cursor:pointer;box-shadow:var(--shadow);user-select:none;-webkit-tap-highlight-color:transparent}
+.cc-card.on{border-color:var(--c);background:var(--cbg)}
+.cc-card .n{font-size:13px;font-weight:700;line-height:1.35;word-break:break-word;padding-right:22px}
+.cc-card .ck{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent}
+.cc-card.on .ck{background:var(--c);border-color:var(--c);color:#fff}
+.cc-card .pl{font-size:11.5px;color:var(--muted)}
+.cc-card .reg{font-size:11px;color:var(--ok);font-weight:600;font-variant-numeric:tabular-nums}
+.cc-card .tbtn{margin-top:auto;align-self:flex-start;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 .warn{color:var(--warn);font-size:12.5px;font-weight:600;margin:-2px 0 8px}
 
 /* grid */
@@ -118,7 +134,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 
   <div class="toolbar">
     <div class="seg grow" id="viewSeg">
-      <button data-v="all">すべて</button><button data-v="my">自分の予定</button>
+      <button data-v="all">すべて</button><button data-v="my">自分の予定</button><button data-v="contents">コンテンツ</button>
     </div>
     <button class="btn primary icon" id="addBtn" aria-label="マイイベントを追加">＋</button>
     <button class="btn icon" id="imgBtn" aria-label="画像で保存" title="画像で保存"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
@@ -251,9 +267,11 @@ const PRESETS = {
 };
 const PRESET_LIST = Object.values(PRESETS).flat();
 const VENUES = [...new Set(PRESET_LIST.map(p => p[1]))];
+const pKey = p => p[0] + '@' + p[1];
+const CAT_COLOR = { 'アクティビティ': '#3b82c4', '展示': '#8e6cc8', 'グッズ': '#d0688f', 'フード': '#2e8b57' };
 
 /* ---------- 自分のデータ（この端末のブラウザに保存） ---------- */
-const me = { my: [], custom: [], dayId: 'd1', view: 'all' };
+const me = { my: [], custom: [], wants: [], ccOnly: false, dayId: 'd1', view: 'all' };
 (function load() {
   try {
     const u = JSON.parse(localStorage.getItem(KEY));
@@ -264,8 +282,11 @@ const me = { my: [], custom: [], dayId: 'd1', view: 'all' };
       id: String(c.id || uid()), dayId: dids.has(c.dayId) ? c.dayId : 'd1', start: normTime(c.start), end: normTime(c.end) || '',
       title: String(c.title).slice(0, 100), place: String(c.place || '').slice(0, 100), note: String(c.note || '').slice(0, 2000) }));
     if (dids.has(u.dayId)) me.dayId = u.dayId;
-    if (['all', 'my'].includes(u.view)) me.view = u.view;
+    if (['all', 'my', 'contents'].includes(u.view)) me.view = u.view;
     // 旧形式（true）は Day1 のサンプルを入れ済み
+    const keys = new Set(PRESET_LIST.map(pKey));
+    me.wants = [...new Set((u.wants || []).map(String).filter(k => keys.has(k)))];
+    me.ccOnly = !!u.ccOnly;
     me.sampled = Array.isArray(u.sampled) ? u.sampled.map(String) : u.sampled === true ? ['lunch-d1'] : [];
   } catch (e) {}
 })();
@@ -275,9 +296,16 @@ const SAMPLES = [
   { key: 'lunch-d2', dayId: 'd2', start: '14:00', end: '15:00', title: 'お昼ごはん' }
 ];
 me.sampled = me.sampled || [];
-const newSamples = SAMPLES.filter(s => !me.sampled.includes(s.key));
-if (newSamples.length) {
-  newSamples.forEach(({ key, ...s }) => { me.custom.push({ id: uid(), place: '', note: '', ...s }); me.sampled.push(key); });
+{
+  const same = (c, s) => c.dayId === s.dayId && c.title === s.title && c.start === s.start && c.end === s.end && !c.place && !c.note;
+  SAMPLES.forEach(({ key, ...s }) => {
+    // 同じ内容のサンプルが重複していたら1つにまとめる
+    const dup = me.custom.filter(c => same(c, s)).slice(1);
+    if (dup.length) me.custom = me.custom.filter(c => !dup.includes(c));
+    if (me.sampled.includes(key)) return;
+    if (!me.custom.some(c => same(c, s))) me.custom.push({ id: uid(), place: '', note: '', ...s });
+    me.sampled.push(key);
+  });
   try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) {}
 }
 let saveTimer;
@@ -292,10 +320,12 @@ function renderAll() { renderHeader(); renderGrid(); tick(); }
 function renderHeader() {
   const cd = curDay();
   $('#dayTabs').innerHTML = EVENT.days.map(d => `<button data-day="${d.id}" class="${d.id === cd.id ? 'active' : ''}">${esc(d.label)}<small>${slash(d.date)}</small></button>`).join('');
+  $('#imgBtn').style.display = me.view === 'contents' ? 'none' : '';
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.v === me.view));
   $('#hint').textContent = {
     all: '見たい枠をタップで ✓（もう一度で解除）。点線のマイイベントはタップで編集。',
-    my: '✓をつけた枠とマイイベントだけを表示中。'
+    my: '✓をつけた枠とマイイベントだけを表示中。',
+    contents: 'カードをタップで ✓（行きたい）。「🕒 時間を決める」で、いま選んでいる日のマイイベントに追加。'
   }[me.view];
 }
 $('#dayTabs').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { me.dayId = b.dataset.day; save(); renderAll(); } });
@@ -391,12 +421,43 @@ function layoutGrid(root) {
 }
 function renderGrid() {
   const wrap = $('#grid'), old = wrap.querySelector('.grid-wrap'), sx = old ? old.scrollLeft : 0, sy = old ? old.scrollTop : 0;
+  if (me.view === 'contents') { wrap.innerHTML = contentsHTML(); return; }
   const inner = gridHTML();
   wrap.innerHTML = inner.startsWith('<p') ? inner : `<div class="grid-wrap">${inner}</div>`;
   layoutGrid(wrap);
   const nw = wrap.querySelector('.grid-wrap'); if (nw) { nw.scrollLeft = sx; nw.scrollTop = sy; }
 }
+// コンテンツ一覧（カード）
+function contentsHTML() {
+  const f = `<div class="cc-filter"><button data-cc="all" class="${me.ccOnly ? '' : 'active'}">すべて</button><button data-cc="on" class="${me.ccOnly ? 'active' : ''}">✓ 行きたい（${me.wants.length}）</button></div>`;
+  const body = Object.entries(PRESETS).map(([cat, list]) => {
+    const cards = list.filter(x => !me.ccOnly || me.wants.includes(pKey(x)));
+    if (!cards.length) return '';
+    const c = CAT_COLOR[cat] || '#888';
+    return `<h3 class="cc-cat" style="--c:${c}">${esc(cat)}<small>${cards.length}</small></h3><div class="cc-grid">` + cards.map(x => {
+      const k = pKey(x), on = me.wants.includes(k);
+      const reg = me.custom.filter(m => m.title === x[0] && m.place === x[1]).sort((a, b) => a.dayId.localeCompare(b.dayId) || toMin(a.start) - toMin(b.start))
+        .map(m => `🕒 ${esc((EVENT.days.find(d => d.id === m.dayId) || {}).label || '')} ${m.start}${m.end ? '–' + m.end : ''}`);
+      return `<div class="cc-card ${on ? 'on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-k="${esc(k)}" style="--c:${c};--cbg:${hexA(c, .12)}">`
+        + `<span class="ck">✓</span><span class="n">${esc(x[0])}</span><span class="pl">📍${esc(x[1])}</span>`
+        + reg.map(r => `<span class="reg">${r}</span>`).join('')
+        + `<button class="tbtn" data-pi="${PRESET_LIST.indexOf(x)}">🕒 時間を決める</button></div>`;
+    }).join('') + '</div>';
+  }).join('');
+  return f + (body || '<p class="empty">✓をつけたコンテンツはまだありません。「すべて」からカードをタップしてください。</p>');
+}
+$('#grid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('cc-card')) { e.preventDefault(); e.target.click(); } });
 $('#grid').addEventListener('click', e => {
+  const f = e.target.closest('[data-cc]');
+  if (f) { me.ccOnly = f.dataset.cc === 'on'; save(); return renderGrid(); }
+  const tb = e.target.closest('.tbtn');
+  if (tb) return openForm(null, +tb.dataset.pi);
+  const card = e.target.closest('.cc-card');
+  if (card) {
+    const i = me.wants.indexOf(card.dataset.k);
+    if (i >= 0) me.wants.splice(i, 1); else me.wants.push(card.dataset.k);
+    save(); return renderGrid();
+  }
   const b = e.target.closest('.slot'); if (!b) return;
   if (b.dataset.cid) return openForm(b.dataset.cid);
   const i = me.my.indexOf(b.dataset.id);
@@ -406,7 +467,7 @@ $('#grid').addEventListener('click', e => {
 
 /* ---------- マイイベントの追加・編集 ---------- */
 let editingId = null;
-function openForm(id) {
+function openForm(id, presetIndex) {
   const c = id ? me.custom.find(x => x.id === id) : null;
   editingId = c ? c.id : null;
   const d = c ? EVENT.days.find(x => x.id === c.dayId) : curDay();
@@ -416,6 +477,8 @@ function openForm(id) {
   $('#cStart').value = c ? c.start : ''; $('#cEnd').value = c ? c.end : ''; $('#cNote').value = c ? c.note : '';
   $('#cSave').textContent = c ? '更新' : '追加'; $('#cDel').style.display = c ? '' : 'none';
   $('#placeList').innerHTML = [...new Set([...VENUES, ...me.custom.map(x => x.place).filter(Boolean)])].map(p => `<option value="${esc(p)}">`).join('');
+  const pre = !id && PRESET_LIST[presetIndex];
+  if (pre) { $('#cTitle').value = pre[0]; $('#cPlace').value = pre[1]; }
   syncPreset();
   checkClash();
   $('#formModal').classList.add('show');
