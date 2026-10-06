@@ -31,7 +31,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
 .title-row{display:flex;align-items:center;gap:8px}
 .title-row h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.daytabs{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.daytabs{display:flex;gap:6px;margin:12px 0 0;overflow-x:auto}
 .daytabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:99px;padding:5px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .daytabs button small{color:var(--muted);font-weight:400;margin-left:4px}
 .daytabs button.active{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -40,14 +40,15 @@ header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 
 .countdown.show{display:block}
 .countdown b{font-variant-numeric:tabular-nums;font-size:16px;color:var(--accent)}
 .countdown .now{color:var(--ok);font-weight:600}
-.toolbar{display:flex;gap:6px;align-items:center;margin:12px 0 6px}
+#viewSeg{margin-top:10px}
 .seg{display:flex;background:var(--surface2);border-radius:10px;padding:3px}
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 4px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .seg button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
-.hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
+.hint{color:var(--muted);font-size:12.5px;margin:8px 0 10px}
 input,textarea,select{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 textarea{resize:vertical;min-height:40px}
 input[type=time]{min-width:0}
+.f-label{font-size:12px;color:var(--muted);margin-bottom:2px}
 label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
 label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .row{display:flex;gap:8px;align-items:center}
@@ -58,32 +59,50 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
 .btn.danger{color:var(--warn)}
 .btn.icon{padding:8px 11px;flex:none;min-width:40px;display:flex;align-items:center;justify-content:center}
-#addBtn{min-width:64px;font-size:18px;padding:6px 18px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
-.empty{color:var(--muted);text-align:center;padding:40px 8px;background:var(--surface);border-radius:var(--radius)}
-/* コンテンツ一覧 */
-.cc-filter{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
-.cc-filter button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
-.cc-filter button.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.empty{color:var(--muted);text-align:center;padding:32px 12px;background:var(--surface);border-radius:var(--radius)}
+.empty .btns{justify-content:center;margin-top:12px}
+.seg button .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:99px;background:var(--accent);color:var(--accent-text);font-size:11px;line-height:18px;vertical-align:1px}
+.seg button .badge:empty{display:none}
+/* はじめての案内 */
+.intro{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border-left:4px solid var(--accent);padding:12px 14px;margin-top:12px;font-size:13.5px}
+.intro ol{margin:6px 0 10px;padding-left:20px}
+.intro li{margin:3px 0}
+/* 会場コンテンツ */
+.cc-map{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:10px 14px;border-radius:10px;background:rgba(42,139,184,.14);border:1px solid rgba(42,139,184,.35);border-left:4px solid #2a8bb8;color:var(--text);font-size:14px;font-weight:700;text-decoration:none}
+.cc-map small{margin-left:auto;color:var(--muted);font-weight:400;font-size:12px}
+.cc-free{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;border:1.5px dashed var(--muted);background:var(--surface);color:var(--text);border-radius:10px;padding:12px 14px;font:inherit;cursor:pointer;text-align:left}
+.cc-free b{font-size:14px}
+.cc-free span{font-size:12px;color:var(--muted)}
 .cc-cat{font-size:14px;margin:16px 0 8px;display:flex;align-items:center;gap:6px}
 .cc-cat::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
 .cc-cat small{color:var(--muted);font-weight:400}
 .cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .cc-card{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:10px 10px 8px;cursor:pointer;box-shadow:var(--shadow);user-select:none;-webkit-tap-highlight-color:transparent}
 .cc-card.on{border-color:var(--c);background:var(--cbg)}
-.cc-card .n{font-size:13px;font-weight:700;line-height:1.35;word-break:break-word;padding-right:22px}
-.cc-card .ck{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent}
+.cc-card .n{font-size:13px;font-weight:700;line-height:1.35;word-break:break-word;padding-right:24px}
+.cc-card .ck{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted)}
 .cc-card.on .ck{background:var(--c);border-color:var(--c);color:#fff}
 .cc-card .pl{font-size:11.5px;color:var(--muted)}
-.cc-card .reg{font-size:11px;color:var(--ok);font-weight:600;font-variant-numeric:tabular-nums}
-.cc-card .tbtn{margin-top:auto;align-self:flex-start;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.cc-card .st{font-size:11px;color:var(--ok);font-weight:600;font-variant-numeric:tabular-nums}
+.tbtn{margin-top:auto;align-self:flex-start;flex:none;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:99px;padding:4px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+/* マイタイテ */
+.my-bar{display:flex;justify-content:flex-end;margin:0 0 8px}
+.wants{display:flex;flex-direction:column;gap:6px}
+.want{display:flex;align-items:center;gap:8px;background:var(--surface);border-left:4px solid var(--c);border-radius:8px;padding:8px 6px 8px 10px;box-shadow:var(--shadow)}
+.want .n{font-size:13px;font-weight:700;line-height:1.35;word-break:break-word}
+.want .pl{font-size:11.5px;color:var(--muted)}
+.want .tbtn{margin:0;align-self:center}
+.want .x{border:0;background:transparent;color:var(--muted);font-size:15px;cursor:pointer;padding:6px 8px;flex:none}
 .warn{color:var(--warn);font-size:12.5px;font-weight:600;margin:-2px 0 8px}
 
 /* grid */
-.grid-wrap{overflow:auto;max-height:calc(100vh - 230px);min-height:300px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);-webkit-overflow-scrolling:touch}
-.grid-inner{--tw:48px;--cw:120px;min-width:calc(var(--tw) + var(--cols) * var(--cw));background:var(--surface)}
-.g-head,.g-body{display:grid;grid-template-columns:var(--tw) repeat(var(--cols),minmax(var(--cw),1fr))}
-.g-head{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line)}
+/* 表は高さ制限なしでページごとスクロール。列見出しは固定ヘッダーの直下に貼り付く */
+.grid-wrap{border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.grid-inner{--tw:48px;background:var(--surface);border-radius:var(--radius)}
+.g-head,.g-body{display:grid;grid-template-columns:var(--tw) repeat(var(--cols),minmax(0,1fr))}
+.g-head{position:sticky;top:var(--hh,150px);z-index:3;background:var(--surface);border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0}
+.ex-grid .g-head{position:static}
 .g-corner{position:sticky;left:0;background:var(--surface);z-index:4}
 .g-stage{padding:8px 6px;font-weight:700;font-size:13px;text-align:center;border-top:4px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-stage.mine{color:var(--muted)}
@@ -122,44 +141,60 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .ex-grid{padding:16px;background:var(--surface);min-width:360px}
 .ex-grid h3{margin:0 0 4px;font-size:18px}
 .ex-grid .d{color:var(--muted);font-size:12px;margin-bottom:10px}
+.slot .mk{position:absolute;top:2px;right:5px;font-size:14px;font-weight:800;opacity:.5}
+.slot.has-mk .n{padding-right:12px}
+.toast.act{pointer-events:auto}
+.toast .undo{border:0;background:transparent;color:inherit;font:inherit;font-weight:700;text-decoration:underline;margin-left:10px;padding:0;cursor:pointer}
+.ex-wants{margin-top:14px;font-size:13px}
+.ex-wants h4{margin:0 0 4px;font-size:13px;color:var(--muted)}
+.ex-wants ul{margin:0;padding-left:18px}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
-    <div class="title-row"><h1 id="evTitle">FF14 ファンフェス</h1></div>
-    <div class="daytabs" id="dayTabs"></div>
+    <div class="title-row"><h1 id="evTitle">FF14 ファンフェス マイタイテ</h1></div>
     <div class="countdown" id="countdown"></div>
+    <div class="seg" id="viewSeg">
+      <button data-v="stage">ステージ</button><button data-v="contents">会場コンテンツ</button><button data-v="my">マイタイテ<span class="badge" id="myCount"></span></button>
+    </div>
   </header>
 
-  <div class="toolbar">
-    <div class="seg grow" id="viewSeg">
-      <button data-v="all">すべて</button><button data-v="my">自分の予定</button><button data-v="contents">コンテンツ</button>
-    </div>
-    <button class="btn primary icon" id="addBtn" aria-label="マイイベントを追加">＋</button>
-    <button class="btn icon" id="imgBtn" aria-label="画像で保存" title="画像で保存"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
+  <div class="intro" id="intro" hidden>
+    <b>はじめての方へ</b>
+    <ol>
+      <li><b>ステージ</b>・<b>会場コンテンツ</b>から、行きたいものをタップしてマイタイテに追加</li>
+      <li><b>マイタイテ</b>で自分の予定を確認（時間を決めるとタイムテーブルに並びます）</li>
+      <li>できあがったら<b>画像で保存</b>して、当日の確認やSNSに</li>
+    </ol>
+    <button class="btn primary" id="introOk">はじめる</button>
   </div>
+
+  <div class="daytabs" id="dayTabs"></div>
   <p class="hint" id="hint"></p>
   <div id="grid"></div>
 </div>
 
-<!-- マイイベント追加・編集 -->
+<!-- 予定の追加・編集 -->
 <div class="modal" id="formModal">
   <div class="box">
-    <h2 id="fHead">マイイベントを追加</h2>
-    <p class="hint" id="fDay"></p>
-    <label class="f">会場のコンテンツから選ぶ<select id="cPreset"></select></label>
-    <label class="f">イベント名<input type="text" id="cTitle" placeholder="例：お昼ごはん"></label>
-    <label class="f">場所<input type="text" id="cPlace" list="placeList" placeholder="例：幕張メッセ"></label>
-    <datalist id="placeList"></datalist>
+    <h2 id="fHead"></h2>
+    <p class="hint" id="fSub"></p>
+    <div id="freeFields">
+      <label class="f">予定の名前<input type="text" id="cTitle" placeholder="例：お昼ごはん、友だちと待ち合わせ"></label>
+      <label class="f">場所（任意）<input type="text" id="cPlace" list="placeList" placeholder="例：幕張メッセ"></label>
+      <datalist id="placeList"></datalist>
+    </div>
+    <div class="f-label">日にち</div>
+    <div class="seg" id="fDaySeg" style="margin-bottom:10px"></div>
     <div class="row">
       <label class="f grow">開始<input type="time" id="cStart"></label>
       <label class="f grow">終了（任意）<input type="time" id="cEnd"></label>
     </div>
-    <label class="f">メモ<textarea id="cNote" rows="2"></textarea></label>
+    <label class="f">メモ（任意）<textarea id="cNote" rows="2"></textarea></label>
     <div class="warn" id="fWarn"></div>
     <div class="btns">
-      <button class="btn primary" id="cSave">追加</button>
+      <button class="btn primary" id="cSave"></button>
       <button class="btn ghost" id="cCancel">キャンセル</button>
       <button class="btn ghost danger" id="cDel" style="display:none;margin-left:auto">削除</button>
     </div>
@@ -170,7 +205,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 <div class="modal" id="imgModal">
   <div class="box">
     <div class="row"><h2 class="grow">画像で保存</h2><button class="btn ghost" id="imgClose">閉じる</button></div>
-    <p class="hint">いま表示中の日・表示のまま画像にしました。スマホは画像を長押しでも保存できます。</p>
+    <p class="hint">表示中の日のマイタイテを画像にしました。スマホは画像を長押しでも保存できます。</p>
     <img id="imgPreview" alt="書き出した画像">
     <div class="btns"><button class="btn primary" id="imgDl">ダウンロード</button><button class="btn" id="imgShare">共有…</button></div>
   </div>
@@ -220,7 +255,7 @@ add('d2', '15:30', '17:30', '直樹の部屋');
 add('d2', '19:30', '20:30', 'THE PRIMALSライブ');
 add('d2', '20:30', '21:00', 'エンディング');
 
-/* ---------- 会場のコンテンツ（マイイベントの選択肢。選ぶと名前と場所が入る） ---------- */
+/* ---------- 会場コンテンツ（カードで表示。タップでマイタイテへ） ---------- */
 const PRESETS = {
   'アクティビティ': [
     ['ファイナルファンタジーXIV：チョコボレースVR', '幕張メッセ'],
@@ -268,36 +303,43 @@ const PRESETS = {
 const PRESET_LIST = Object.values(PRESETS).flat();
 const VENUES = [...new Set(PRESET_LIST.map(p => p[1]))];
 const pKey = p => p[0] + '@' + p[1];
+// 公式サイトのアクセス・周辺マップ
+const MAP_URL = 'https://fanfest.finalfantasyxiv.com/2026/jp/about/';
 const CAT_COLOR = { 'アクティビティ': '#3b82c4', '展示': '#8e6cc8', 'グッズ': '#d0688f', 'フード': '#2e8b57' };
 
-/* ---------- 自分のデータ（この端末のブラウザに保存） ---------- */
-const me = { my: [], custom: [], wants: [], ccOnly: false, dayId: 'd1', view: 'all' };
+/* ---------- 自分のデータ（この端末のブラウザに保存） ----------
+   my: ✓したステージ枠 / custom: 時間を決めた予定（コンテンツ・ほかの予定） / wants: 時間未定のやりたいこと */
+const me = { my: [], custom: [], wants: [], dayId: 'd1', view: 'stage', introDone: false };
 (function load() {
   try {
     const u = JSON.parse(localStorage.getItem(KEY));
     if (!u) return;
-    const ids = new Set(SLOTS.map(s => s.id)), dids = new Set(EVENT.days.map(d => d.id));
+    const ids = new Set(SLOTS.map(s => s.id)), dids = new Set(EVENT.days.map(d => d.id)), keys = new Set(PRESET_LIST.map(pKey));
     me.my = [...new Set((u.my || []).map(String).filter(id => ids.has(id)))];
     me.custom = (Array.isArray(u.custom) ? u.custom : []).filter(c => c && c.title && normTime(c.start)).map(c => ({
       id: String(c.id || uid()), dayId: dids.has(c.dayId) ? c.dayId : 'd1', start: normTime(c.start), end: normTime(c.end) || '',
       title: String(c.title).slice(0, 100), place: String(c.place || '').slice(0, 100), note: String(c.note || '').slice(0, 2000) }));
-    if (dids.has(u.dayId)) me.dayId = u.dayId;
-    if (['all', 'my', 'contents'].includes(u.view)) me.view = u.view;
-    // 旧形式（true）は Day1 のサンプルを入れ済み
-    const keys = new Set(PRESET_LIST.map(pKey));
     me.wants = [...new Set((u.wants || []).map(String).filter(k => keys.has(k)))];
-    me.ccOnly = !!u.ccOnly;
+    if (dids.has(u.dayId)) me.dayId = u.dayId;
+    me.view = { all: 'stage', stage: 'stage', contents: 'contents', my: 'my' }[u.view] || 'stage';
+    me.introDone = !!u.introDone;
+    // 旧形式（true）は Day1 のサンプルを入れ済み
     me.sampled = Array.isArray(u.sampled) ? u.sampled.map(String) : u.sampled === true ? ['lunch-d1'] : [];
   } catch (e) {}
 })();
-// サンプルのマイイベントを各ブラウザに1回ずつだけ入れる（消しても復活しない）
+// サンプルの予定を各ブラウザに1回ずつだけ入れる（消しても復活しない）
 const SAMPLES = [
   { key: 'lunch-d1', dayId: 'd1', start: '14:00', end: '15:00', title: 'お昼ごはん' },
-  { key: 'lunch-d2', dayId: 'd2', start: '14:00', end: '15:00', title: 'お昼ごはん' }
+  { key: 'lunch-d2', dayId: 'd2', start: '12:00', end: '12:30', title: 'お昼ごはん' }
 ];
 me.sampled = me.sampled || [];
 {
   const same = (c, s) => c.dayId === s.dayId && c.title === s.title && c.start === s.start && c.end === s.end && !c.place && !c.note;
+  // Day2 のサンプルは 14:00–15:00 から 12:00–12:30 に変更。手を加えていない旧サンプルは新しい時間に直す
+  if (!me.sampled.includes('lunch-d2-1200')) {
+    me.custom.forEach(c => { if (same(c, { dayId: 'd2', title: 'お昼ごはん', start: '14:00', end: '15:00' })) Object.assign(c, { start: '12:00', end: '12:30' }); });
+    me.sampled.push('lunch-d2-1200');
+  }
   SAMPLES.forEach(({ key, ...s }) => {
     // 同じ内容のサンプルが重複していたら1つにまとめる
     const dup = me.custom.filter(c => same(c, s)).slice(1);
@@ -311,34 +353,65 @@ me.sampled = me.sampled || [];
 let saveTimer;
 const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) { toast('保存に失敗しました'); } }, 150); };
 const curDay = () => EVENT.days.find(d => d.id === me.dayId) || EVENT.days[0];
+const dayLabel = id => (EVENT.days.find(d => d.id === id) || {}).label || '';
+const presetOf = c => PRESET_LIST.find(p => p[0] === c.title && p[1] === c.place);
+const catColor = p => CAT_COLOR[Object.keys(PRESETS).find(cat => PRESETS[cat].includes(p))] || '#888';
 
-let toastTimer;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+let toastTimer, toastUndo = null;
+function toast(msg, undo) {
+  const t = $('#toast');
+  t.innerHTML = esc(msg) + (undo ? '<button class="undo">取り消す</button>' : '');
+  toastUndo = undo || null; t.classList.toggle('act', !!undo); t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.classList.remove('show', 'act'); toastUndo = null; }, undo ? 4000 : 2200);
+}
+$('#toast').addEventListener('click', e => {
+  if (!e.target.closest('.undo') || !toastUndo) return;
+  const u = toastUndo; toastUndo = null; u();
+  $('#toast').classList.remove('show', 'act');
+});
+// 予定を変更して保存・再描画し、「取り消す」付きで知らせる
+function change(fn, msg) {
+  const snap = JSON.stringify([me.my, me.custom, me.wants]);
+  fn(); save(); renderAll();
+  toast(msg, () => { [me.my, me.custom, me.wants] = JSON.parse(snap); save(); renderAll(); toast('元に戻しました'); });
+}
 
 /* ---------- 画面 ---------- */
 function renderAll() { renderHeader(); renderGrid(); tick(); }
 function renderHeader() {
   const cd = curDay();
   $('#dayTabs').innerHTML = EVENT.days.map(d => `<button data-day="${d.id}" class="${d.id === cd.id ? 'active' : ''}">${esc(d.label)}<small>${slash(d.date)}</small></button>`).join('');
-  $('#imgBtn').style.display = me.view === 'contents' ? 'none' : '';
+  // 会場コンテンツは日にちに関係ないので日付タブを隠す
+  $('#dayTabs').style.display = me.view === 'contents' ? 'none' : '';
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.v === me.view));
+  $('#myCount').textContent = me.my.length + me.custom.length + me.wants.length || '';
+  $('#intro').hidden = me.introDone;
   $('#hint').textContent = {
-    all: '見たい枠をタップで ✓（もう一度で解除）。点線のマイイベントはタップで編集。',
-    my: '✓をつけた枠とマイイベントだけを表示中。',
-    contents: 'カードをタップで ✓（行きたい）。「🕒 時間を決める」で、いま選んでいる日のマイイベントに追加。'
+    stage: '見たい枠をタップでマイタイテに追加。もう一度タップで外せます。',
+    contents: '行きたいものをタップでマイタイテに追加。行く時間を決めたいときは「🕒 時間を決める」。',
+    my: '自分の予定です。タップで編集できます。時間未定のものは下の「やりたいこと」に並びます。'
   }[me.view];
 }
-$('#dayTabs').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { me.dayId = b.dataset.day; save(); renderAll(); } });
-$('#viewSeg').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) { me.view = b.dataset.v; save(); renderAll(); } });
+$('#dayTabs').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { me.dayId = b.dataset.day; save(); renderAll(); scrollToNow(); } });
+// 当日なら現在時刻の線が画面の上のほうに来るようにスクロール。それ以外はページの先頭へ
+function scrollToNow() {
+  const line = document.querySelector('#grid .now-line');
+  if (!line) return window.scrollTo(0, 0);
+  const head = document.querySelector('#grid .g-head');
+  const y = line.getBoundingClientRect().top + window.scrollY - $('header.top').offsetHeight - (head ? head.offsetHeight : 0) - 80;
+  window.scrollTo(0, Math.max(0, y));
+}
+const setView = v => { me.view = v; save(); renderAll(); scrollToNow(); };
+$('#viewSeg').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) setView(b.dataset.v); });
+$('#introOk').addEventListener('click', () => { me.introDone = true; save(); renderHeader(); });
 
-// opts.flat = 画像用（現在時刻線・スクロール固定なし）
-function gridHTML(opts = {}) {
-  const cd = curDay(), view = me.view;
-  const slots = SLOTS.filter(s => s.dayId === cd.id && (view === 'all' || me.my.includes(s.id)));
-  const mine = me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start));
-  if (!slots.length && !mine.length) {
-    return `<p class="empty">${esc(cd.label)}：「すべて」で見たい枠をタップするか、＋でマイイベントを追加してください。</p>`;
-  }
+// mode: 'stage' = 公式タイムテーブル全部 / 'my' = マイタイテ（✓した枠＋時間を決めた予定）
+// opts.flat = 画像用（現在時刻線・スクロール固定なし）。予定がなければ '' を返す
+function gridHTML(mode, opts = {}) {
+  const cd = curDay();
+  const slots = SLOTS.filter(s => s.dayId === cd.id && (mode === 'stage' || me.my.includes(s.id)));
+  const mine = mode === 'my' ? me.custom.filter(c => c.dayId === cd.id).sort((a, b) => toMin(a.start) - toMin(b.start)) : [];
+  if (!slots.length && !mine.length) return '';
   const mEnd = c => c.end ? endMin(c.start, c.end) : toMin(c.start) + 20;
   // 短い予定もブロックの最小の高さぶんは枠内に収める（深夜帯の見切れ対策）
   const VMIN = Math.ceil(30 / PX);
@@ -350,7 +423,7 @@ function gridHTML(opts = {}) {
   const cols = (showStage ? 1 : 0) + (mine.length ? 1 : 0) || 1;
   let h = `<div class="grid-inner" style="--cols:${cols}"><div class="g-head"><div class="g-corner"></div>`;
   if (showStage) h += `<div class="g-stage" style="--c:${STAGE.color}">${esc(STAGE.name)}</div>`;
-  if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">マイイベント</div>';
+  if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">会場・ほかの予定</div>';
   h += `</div><div class="g-body" style="height:${(max - min) * PX + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
   for (let t = min; t <= max; t += 60) h += `<div class="g-time" style="top:${(t - min) * PX + 4}px">${fmt(t)}</div>`;
   h += '</div>';
@@ -366,16 +439,16 @@ function gridHTML(opts = {}) {
     h += col();
     slots.forEach(s => {
       const a = toMin(s.start), b = s.end ? endMin(s.start, s.end) : a + 20, on = me.my.includes(s.id);
-      h += `<button class="slot ${on ? 'on' : ''}" data-id="${s.id}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
-        + `<span class="t">${s.start}${s.end ? '–' + s.end : ''}</span><span class="n">${esc(s.title)}</span></button>`;
+      h += `<button class="slot ${on ? 'on' : 'has-mk'}" data-id="${s.id}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
+        + `<span class="t">${s.start}${s.end ? '–' + s.end : ''}</span><span class="n">${esc(s.title)}</span>${on ? '' : '<span class="mk">＋</span>'}</button>`;
     });
     h += '</div>';
   }
   if (mine.length) {
     h += col();
     mine.forEach(c => {
-      const a = toMin(c.start), b = mEnd(c);
-      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px">`
+      const a = toMin(c.start), b = mEnd(c), p = presetOf(c);
+      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px${p ? `;border-left-color:${catColor(p)}` : ''}">`
         + `<span class="t">${c.start}${c.end ? '–' + c.end : ''}</span><span class="n">${esc(c.title)}</span>${c.place ? `<span class="pl">📍${esc(c.place)}</span>` : ''}${c.note && !opts.flat ? '<span class="memo-dot">📝</span>' : ''}</div>`;
     });
     h += '</div>';
@@ -420,91 +493,97 @@ function layoutGrid(root) {
   });
 }
 function renderGrid() {
-  const wrap = $('#grid'), old = wrap.querySelector('.grid-wrap'), sx = old ? old.scrollLeft : 0, sy = old ? old.scrollTop : 0;
+  const wrap = $('#grid');
   if (me.view === 'contents') { wrap.innerHTML = contentsHTML(); return; }
-  const inner = gridHTML();
-  wrap.innerHTML = inner.startsWith('<p') ? inner : `<div class="grid-wrap">${inner}</div>`;
+  const inner = gridHTML(me.view);
+  const grid = inner ? `<div class="grid-wrap">${inner}</div>` : '';
+  if (me.view === 'stage') wrap.innerHTML = grid;
+  else {
+    const empty = `<div class="empty">${esc(curDay().label)} の予定はまだありません。<div class="btns"><button class="btn" data-go="stage">ステージから選ぶ</button><button class="btn" data-go="contents">会場コンテンツから選ぶ</button></div></div>`;
+    wrap.innerHTML = (inner || me.wants.length ? '<div class="my-bar"><button class="btn" data-act="img">⤓ 画像で保存</button></div>' : '')
+      + (grid || empty) + wantsHTML();
+  }
   layoutGrid(wrap);
-  const nw = wrap.querySelector('.grid-wrap'); if (nw) { nw.scrollLeft = sx; nw.scrollTop = sy; }
 }
-// コンテンツ一覧（カード）
+// マイタイテ下部：時間未定のやりたいこと
+function wantsHTML() {
+  const list = me.wants.map(k => PRESET_LIST.find(p => pKey(p) === k)).filter(Boolean);
+  if (!list.length) return '';
+  return `<h3 class="cc-cat" style="--c:var(--muted)">やりたいこと（時間未定）<small>${list.length}</small></h3><div class="wants">`
+    + list.map(p => `<div class="want" style="--c:${catColor(p)}"><div class="grow"><div class="n">${esc(p[0])}</div><div class="pl">📍${esc(p[1])}</div></div>`
+      + `<button class="tbtn" data-pi="${PRESET_LIST.indexOf(p)}">🕒 時間を決める</button><button class="x" data-unwant="${esc(pKey(p))}" aria-label="外す" title="外す">✕</button></div>`).join('')
+    + '</div>';
+}
+// 会場コンテンツ（カード）
 function contentsHTML() {
-  const f = `<div class="cc-filter"><button data-cc="all" class="${me.ccOnly ? '' : 'active'}">すべて</button><button data-cc="on" class="${me.ccOnly ? 'active' : ''}">✓ 行きたい（${me.wants.length}）</button></div>`;
-  const body = Object.entries(PRESETS).map(([cat, list]) => {
-    const cards = list.filter(x => !me.ccOnly || me.wants.includes(pKey(x)));
-    if (!cards.length) return '';
+  const free = '<button class="cc-free" data-act="free"><b>＋ コンテンツの他にも予定を追加</b><span>お昼ごはん・待ち合わせ・休憩 など</span></button>';
+  const map = `<a class="cc-map" href="${MAP_URL}" target="_blank" rel="noopener">🗺 会場の周辺マップ・アクセス<small>公式サイト ↗</small></a>`;
+  return map + free + Object.entries(PRESETS).map(([cat, list]) => {
     const c = CAT_COLOR[cat] || '#888';
-    return `<h3 class="cc-cat" style="--c:${c}">${esc(cat)}<small>${cards.length}</small></h3><div class="cc-grid">` + cards.map(x => {
-      const k = pKey(x), on = me.wants.includes(k);
-      const reg = me.custom.filter(m => m.title === x[0] && m.place === x[1]).sort((a, b) => a.dayId.localeCompare(b.dayId) || toMin(a.start) - toMin(b.start))
-        .map(m => `🕒 ${esc((EVENT.days.find(d => d.id === m.dayId) || {}).label || '')} ${m.start}${m.end ? '–' + m.end : ''}`);
+    return `<h3 class="cc-cat" style="--c:${c}">${esc(cat)}<small>${list.length}</small></h3><div class="cc-grid">` + list.map(x => {
+      const k = pKey(x), want = me.wants.includes(k);
+      const reg = me.custom.filter(m => m.title === x[0] && m.place === x[1]).sort((a, b) => a.dayId.localeCompare(b.dayId) || toMin(a.start) - toMin(b.start));
+      const on = want || reg.length > 0;
+      const st = reg.map(m => `🕒 ${esc(dayLabel(m.dayId))} ${m.start}${m.end ? '–' + m.end : ''}`).concat(want ? ['✓ やりたいことに追加済み'] : []);
       return `<div class="cc-card ${on ? 'on' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-k="${esc(k)}" style="--c:${c};--cbg:${hexA(c, .12)}">`
-        + `<span class="ck">✓</span><span class="n">${esc(x[0])}</span><span class="pl">📍${esc(x[1])}</span>`
-        + reg.map(r => `<span class="reg">${r}</span>`).join('')
+        + `<span class="ck">${on ? '✓' : '＋'}</span><span class="n">${esc(x[0])}</span><span class="pl">📍${esc(x[1])}</span>`
+        + st.map(s => `<span class="st">${s}</span>`).join('')
         + `<button class="tbtn" data-pi="${PRESET_LIST.indexOf(x)}">🕒 時間を決める</button></div>`;
     }).join('') + '</div>';
   }).join('');
-  return f + (body || '<p class="empty">✓をつけたコンテンツはまだありません。「すべて」からカードをタップしてください。</p>');
 }
 $('#grid').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('cc-card')) { e.preventDefault(); e.target.click(); } });
 $('#grid').addEventListener('click', e => {
-  const f = e.target.closest('[data-cc]');
-  if (f) { me.ccOnly = f.dataset.cc === 'on'; save(); return renderGrid(); }
-  const tb = e.target.closest('.tbtn');
-  if (tb) return openForm(null, +tb.dataset.pi);
-  const card = e.target.closest('.cc-card');
+  const t = e.target;
+  const go = t.closest('[data-go]'); if (go) return setView(go.dataset.go);
+  const act = t.closest('[data-act]');
+  if (act) return act.dataset.act === 'free' ? openForm({}) : exportImage();
+  const un = t.closest('[data-unwant]');
+  if (un) { const p = PRESET_LIST.find(x => pKey(x) === un.dataset.unwant); return change(() => { me.wants = me.wants.filter(k => k !== un.dataset.unwant); }, `「${p[0]}」を外しました`); }
+  const tb = t.closest('.tbtn'); if (tb) return openForm({ preset: PRESET_LIST[+tb.dataset.pi] });
+  const card = t.closest('.cc-card');
   if (card) {
-    const i = me.wants.indexOf(card.dataset.k);
-    if (i >= 0) me.wants.splice(i, 1); else me.wants.push(card.dataset.k);
-    save(); return renderGrid();
+    const k = card.dataset.k, p = PRESET_LIST.find(x => pKey(x) === k);
+    // 時間を決め済みならその予定を開く。未定なら「やりたいこと」に出し入れ
+    const reg = me.custom.find(m => m.title === p[0] && m.place === p[1]);
+    if (reg) return openForm({ id: reg.id });
+    if (me.wants.includes(k)) return change(() => { me.wants = me.wants.filter(x => x !== k); }, `「${p[0]}」を外しました`);
+    return change(() => { me.wants.push(k); }, 'マイタイテの「やりたいこと」に追加しました');
   }
-  const b = e.target.closest('.slot'); if (!b) return;
-  if (b.dataset.cid) return openForm(b.dataset.cid);
-  const i = me.my.indexOf(b.dataset.id);
-  if (i >= 0) me.my.splice(i, 1); else me.my.push(b.dataset.id);
-  save(); renderGrid(); tick();
+  const b = t.closest('.slot'); if (!b) return;
+  if (b.dataset.cid) return openForm({ id: b.dataset.cid });
+  const s = SLOTS.find(x => x.id === b.dataset.id), on = me.my.includes(s.id);
+  change(() => { me.my = on ? me.my.filter(x => x !== s.id) : [...me.my, s.id]; }, on ? `「${s.title}」をマイタイテから外しました` : `「${s.title}」をマイタイテに追加しました`);
 });
 
-/* ---------- マイイベントの追加・編集 ---------- */
-let editingId = null;
-function openForm(id, presetIndex) {
+/* ---------- 予定の追加・編集 ----------
+   コンテンツの予定：名前・場所は固定で、日にちと時間だけ選ぶ
+   ほかの予定（自由入力）：名前・場所も入力する */
+let editingId = null, formDayId = null, formPreset = null;
+// フォームの日にち切り替え（Day1 / Day2）
+const renderFormDay = () => { $('#fDaySeg').innerHTML = EVENT.days.map(d => `<button type="button" data-day="${d.id}" class="${d.id === formDayId ? 'active' : ''}">${esc(d.label)}（${slash(d.date)}）</button>`).join(''); };
+$('#fDaySeg').addEventListener('click', e => { const b = e.target.closest('button[data-day]'); if (b) { formDayId = b.dataset.day; renderFormDay(); checkClash(); } });
+function openForm({ id, preset }) {
   const c = id ? me.custom.find(x => x.id === id) : null;
   editingId = c ? c.id : null;
-  const d = c ? EVENT.days.find(x => x.id === c.dayId) : curDay();
-  $('#fHead').textContent = c ? 'マイイベントを編集' : 'マイイベントを追加';
-  $('#fDay').textContent = `${d.label}（${slash(d.date)}）の予定`;
+  formPreset = (c ? presetOf(c) : preset) || null;
+  formDayId = c ? c.dayId : curDay().id; renderFormDay();
+  $('#freeFields').style.display = formPreset ? 'none' : '';
+  $('#fHead').textContent = formPreset ? formPreset[0] : c ? 'ほかの予定を編集' : 'ほかの予定を追加';
+  $('#fSub').textContent = formPreset ? `📍${formPreset[1]}　行く日にちと時間を選んでください` : '会場コンテンツ以外の予定（お昼ごはん・待ち合わせ など）';
   $('#cTitle').value = c ? c.title : ''; $('#cPlace').value = c ? c.place : '';
   $('#cStart').value = c ? c.start : ''; $('#cEnd').value = c ? c.end : ''; $('#cNote').value = c ? c.note : '';
-  $('#cSave').textContent = c ? '更新' : '追加'; $('#cDel').style.display = c ? '' : 'none';
+  $('#cSave').textContent = c ? '更新' : 'マイタイテに追加'; $('#cDel').style.display = c ? '' : 'none';
   $('#placeList').innerHTML = [...new Set([...VENUES, ...me.custom.map(x => x.place).filter(Boolean)])].map(p => `<option value="${esc(p)}">`).join('');
-  const pre = !id && PRESET_LIST[presetIndex];
-  if (pre) { $('#cTitle').value = pre[0]; $('#cPlace').value = pre[1]; }
-  syncPreset();
   checkClash();
   $('#formModal').classList.add('show');
 }
-// 会場コンテンツの選択肢（カテゴリごと）
-$('#cPreset').innerHTML = '<option value="">（自由入力）</option>' + Object.entries(PRESETS).map(([cat, list]) =>
-  `<optgroup label="${esc(cat)}">${list.map(([t, p]) => `<option value="${PRESET_LIST.findIndex(x => x[0] === t && x[1] === p)}">${esc(t)}（${esc(p)}）</option>`).join('')}</optgroup>`).join('');
-// 名前・場所が選択肢と一致していればその項目を選択状態にする
-const syncPreset = () => {
-  const t = $('#cTitle').value.trim(), p = $('#cPlace').value.trim();
-  const i = PRESET_LIST.findIndex(x => x[0] === t && x[1] === p);
-  $('#cPreset').value = i >= 0 ? String(i) : '';
-};
-$('#cPreset').addEventListener('change', e => {
-  const p = PRESET_LIST[+e.target.value];
-  if (!p) return;
-  $('#cTitle').value = p[0]; $('#cPlace').value = p[1];
-  if (!$('#cStart').value) $('#cStart').focus();
-});
-['#cTitle', '#cPlace'].forEach(s => $(s).addEventListener('input', syncPreset));
-const closeForm = () => { $('#formModal').classList.remove('show'); editingId = null; };
-// 選んだ枠・他のマイイベントとの時間の被りを表示
+const closeForm = () => { $('#formModal').classList.remove('show'); editingId = null; formPreset = null; };
+// ✓した枠・他の予定との時間の被りを表示
 function checkClash() {
   const s = normTime($('#cStart').value), e = normTime($('#cEnd').value), w = $('#fWarn');
   if (!s || !e) { w.textContent = ''; return; }
-  const dayId = editingId ? me.custom.find(x => x.id === editingId).dayId : curDay().id;
+  const dayId = formDayId;
   const a = toMin(s), b = endMin(s, e);
   const hits = [
     ...SLOTS.filter(x => x.dayId === dayId && me.my.includes(x.id)),
@@ -513,22 +592,27 @@ function checkClash() {
   w.textContent = hits.length ? `⚠ 「${hits.join('」「')}」と時間が被っています` : '';
 }
 ['#cStart', '#cEnd'].forEach(s => $(s).addEventListener('change', checkClash));
-$('#addBtn').addEventListener('click', () => openForm(null));
 $('#cCancel').addEventListener('click', closeForm);
 $('#formModal').addEventListener('click', e => { if (e.target.id === 'formModal') closeForm(); });
 $('#cSave').addEventListener('click', () => {
-  const start = normTime($('#cStart').value), title = $('#cTitle').value.trim();
-  if (!title || !start) return toast('イベント名と開始時刻を入れてください');
-  const data = { start, end: normTime($('#cEnd').value) || '', title: title.slice(0, 100), place: $('#cPlace').value.trim().slice(0, 100), note: $('#cNote').value.slice(0, 2000) };
-  const c = editingId && me.custom.find(x => x.id === editingId);
-  if (c) Object.assign(c, data); else me.custom.push({ id: uid(), dayId: curDay().id, ...data });
-  toast(c ? '更新しました' : '追加しました');
-  closeForm(); save(); renderGrid(); tick();
+  const start = normTime($('#cStart').value), pre = formPreset;
+  const title = pre ? pre[0] : $('#cTitle').value.trim(), place = pre ? pre[1] : $('#cPlace').value.trim();
+  if (!title) return toast('予定の名前を入れてください');
+  if (!start) return toast('開始時刻を選んでください');
+  const data = { dayId: formDayId, start, end: normTime($('#cEnd').value) || '', title: title.slice(0, 100), place: place.slice(0, 100), note: $('#cNote').value.slice(0, 2000) };
+  const id = editingId;
+  closeForm();
+  change(() => {
+    const c = id && me.custom.find(x => x.id === id);
+    if (c) Object.assign(c, data); else me.custom.push({ id: uid(), ...data });
+    // 時間を決めたので「やりたいこと」からは外す
+    if (pre) me.wants = me.wants.filter(k => k !== pKey(pre));
+  }, `${id ? '更新' : 'マイタイテに追加'}しました（${dayLabel(data.dayId)} ${start}〜）`);
 });
 $('#cDel').addEventListener('click', () => {
-  if (!editingId || !confirm('このマイイベントを削除しますか？')) return;
-  me.custom = me.custom.filter(c => c.id !== editingId);
-  closeForm(); save(); renderGrid(); tick(); toast('削除しました');
+  const id = editingId; if (!id) return;
+  closeForm();
+  change(() => { me.custom = me.custom.filter(c => c.id !== id); }, '削除しました');
 });
 
 /* ---------- カウントダウン ---------- */
@@ -562,29 +646,31 @@ function tick() {
 setInterval(tick, 1000);
 setInterval(renderGrid, 60000);
 
-/* ---------- 画像で保存 ---------- */
+/* ---------- 画像で保存（表示中の日のマイタイテ） ---------- */
 let lastBlob = null, lastName = '';
 const canShareFile = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([new Blob()], 'a.png', { type: 'image/png' })] })); } catch (_) { return false; } };
-$('#imgBtn').addEventListener('click', async () => {
+async function exportImage() {
   if (!window.html2canvas) return toast('画像ライブラリを読み込めませんでした。通信状況を確認してください');
-  const inner = gridHTML({ flat: true });
-  if (inner.startsWith('<p')) return toast('画像にする予定がありません');
-  const cd = curDay(), kind = { all: 'タイムテーブル', my: 'マイタイテ' }[me.view];
+  const inner = gridHTML('my', { flat: true });
+  const wants = me.wants.map(k => PRESET_LIST.find(p => pKey(p) === k)).filter(Boolean);
+  if (!inner && !wants.length) return toast('画像にする予定がありません');
+  const cd = curDay();
   const area = $('#exportArea');
-  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　${kind}</div>${inner}</div>`;
+  area.innerHTML = `<div class="ex-grid"><h3>${esc(EVENT.name)}</h3><div class="d">${esc(cd.label)}　${cd.date.replace(/-/g, '/')}　マイタイテ</div>${inner}`
+    + (wants.length ? `<div class="ex-wants"><h4>やりたいこと（時間未定）</h4><ul>${wants.map(p => `<li>${esc(p[0])}（${esc(p[1])}）</li>`).join('')}</ul></div>` : '') + '</div>';
   layoutGrid(area);
   toast('画像を作成中…');
   try {
     const el = area.firstElementChild;
     const canvas = await html2canvas(el, { scale: 2, backgroundColor: getComputedStyle(document.body).backgroundColor, logging: false, windowWidth: Math.max(el.scrollWidth + 40, 480) });
     lastBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-    lastName = `ファンフェス_${cd.label}_${kind}.png`;
+    lastName = `ファンフェス_${cd.label}_マイタイテ.png`;
     $('#imgPreview').src = URL.createObjectURL(lastBlob);
     $('#imgShare').style.display = canShareFile() ? '' : 'none';
     $('#imgModal').classList.add('show');
   } catch (err) { console.error(err); toast('画像の作成に失敗しました'); }
   finally { area.innerHTML = ''; }
-});
+}
 $('#imgClose').addEventListener('click', () => $('#imgModal').classList.remove('show'));
 $('#imgModal').addEventListener('click', e => { if (e.target.id === 'imgModal') $('#imgModal').classList.remove('show'); });
 $('#imgDl').addEventListener('click', () => {
@@ -596,7 +682,12 @@ $('#imgShare').addEventListener('click', async () => {
   try { await navigator.share({ files: [new File([lastBlob], lastName, { type: 'image/png' })], title: EVENT.name }); } catch (_) {}
 });
 
+// 固定ヘッダーの高さを列見出しの貼り付き位置に使う
+const syncHeaderHeight = () => document.documentElement.style.setProperty('--hh', $('header.top').offsetHeight + 'px');
+if (window.ResizeObserver) new ResizeObserver(syncHeaderHeight).observe($('header.top'));
+syncHeaderHeight();
 renderAll();
+scrollToNow();
 })();
 </script>
 </body>
