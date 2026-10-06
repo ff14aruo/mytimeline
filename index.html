@@ -102,7 +102,10 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .grid-inner{--tw:48px;background:var(--surface);border-radius:var(--radius)}
 .g-head,.g-body{display:grid;grid-template-columns:var(--tw) repeat(var(--cols),minmax(0,1fr))}
 .g-head{position:sticky;top:var(--hh,150px);z-index:3;background:var(--surface);border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0}
-.ex-grid .g-head{position:static}
+.ex-grid .g-head,.ex-grid .g-corner{position:static}
+.ex-grid .g-head,.ex-grid .grid-inner{border-radius:0}
+/* html2canvas は省略記号(…)の列見出しを正しく描けないので、画像では折り返す */
+.ex-grid .g-stage{white-space:normal;overflow:visible;text-overflow:clip}
 .g-corner{position:sticky;left:0;background:var(--surface);z-index:4}
 .g-stage{padding:8px 6px;font-weight:700;font-size:13px;text-align:center;border-top:4px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-stage.mine{color:var(--muted)}
@@ -137,8 +140,9 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 .modal img{width:100%;border-radius:8px;display:block;margin:8px 0}
 
 /* export (offscreen) */
-#exportArea{position:fixed;left:-10000px;top:0}
-.ex-grid{padding:16px;background:var(--surface);min-width:360px}
+#exportArea{position:absolute;left:-10000px;top:0}
+/* 画像はスマホ1画面（縦長 9:16 前後）に収まる大きさで書き出す */
+.ex-grid{padding:16px;background:var(--surface);width:420px}
 .ex-grid h3{margin:0 0 4px;font-size:18px}
 .ex-grid .d{color:var(--muted);font-size:12px;margin-bottom:10px}
 .slot .mk{position:absolute;top:2px;right:5px;font-size:14px;font-weight:800;opacity:.5}
@@ -407,6 +411,7 @@ $('#introOk').addEventListener('click', () => { me.introDone = true; save(); ren
 
 // mode: 'stage' = 公式タイムテーブル全部 / 'my' = マイタイテ（✓した枠＋時間を決めた予定）
 // opts.flat = 画像用（現在時刻線・スクロール固定なし）。予定がなければ '' を返す
+// opts.fit = 画像用：表の本体をおおよそこの高さ(px)に縮める
 function gridHTML(mode, opts = {}) {
   const cd = curDay();
   const slots = SLOTS.filter(s => s.dayId === cd.id && (mode === 'stage' || me.my.includes(s.id)));
@@ -419,19 +424,21 @@ function gridHTML(mode, opts = {}) {
   slots.forEach(s => { min = Math.min(min, toMin(s.start)); max = Math.max(max, endMin(s.start, s.end), toMin(s.start) + VMIN); });
   mine.forEach(c => { min = Math.min(min, toMin(c.start)); max = Math.max(max, mEnd(c), toMin(c.start) + VMIN); });
   min = Math.floor(min / 60) * 60; max = Math.ceil(max / 60) * 60;
+  // opts.fit = 表の本体をこの高さ(px)に収めたいとき（画像用）。縮めすぎない下限つき
+  const px = opts.fit ? Math.min(PX, Math.max(0.7, opts.fit / (max - min))) : PX;
   const showStage = slots.length > 0;
   const cols = (showStage ? 1 : 0) + (mine.length ? 1 : 0) || 1;
   let h = `<div class="grid-inner" style="--cols:${cols}"><div class="g-head"><div class="g-corner"></div>`;
   if (showStage) h += `<div class="g-stage" style="--c:${STAGE.color}">${esc(STAGE.name)}</div>`;
   if (mine.length) h += '<div class="g-stage mine" style="--c:var(--muted)">会場・ほかの予定</div>';
-  h += `</div><div class="g-body" style="height:${(max - min) * PX + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
-  for (let t = min; t <= max; t += 60) h += `<div class="g-time" style="top:${(t - min) * PX + 4}px">${fmt(t)}</div>`;
+  h += `</div><div class="g-body" style="height:${(max - min) * px + 14}px"><div class="g-times" style="position:${opts.flat ? 'relative' : 'sticky'}">`;
+  for (let t = min; t <= max; t += 60) h += `<div class="g-time" style="top:${(t - min) * px + 4}px">${fmt(t)}</div>`;
   h += '</div>';
   let nowTop = null;
-  if (!opts.flat && cd.date === todayStr()) { const d = new Date(), n = d.getHours() * 60 + d.getMinutes(); if (n >= min && n <= max) nowTop = (n - min) * PX + 4; }
+  if (!opts.flat && cd.date === todayStr()) { const d = new Date(), n = d.getHours() * 60 + d.getMinutes(); if (n >= min && n <= max) nowTop = (n - min) * px + 4; }
   const col = () => {
     let c = '<div class="g-col">';
-    for (let t = min; t <= max; t += 30) c += `<div class="g-line ${t % 60 ? 'half' : ''}" style="top:${(t - min) * PX + 4}px"></div>`;
+    for (let t = min; t <= max; t += 30) c += `<div class="g-line ${t % 60 ? 'half' : ''}" style="top:${(t - min) * px + 4}px"></div>`;
     if (nowTop !== null) c += `<div class="now-line" style="top:${nowTop}px"></div>`;
     return c;
   };
@@ -439,7 +446,7 @@ function gridHTML(mode, opts = {}) {
     h += col();
     slots.forEach(s => {
       const a = toMin(s.start), b = s.end ? endMin(s.start, s.end) : a + 20, on = me.my.includes(s.id);
-      h += `<button class="slot ${on ? 'on' : 'has-mk'}" data-id="${s.id}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
+      h += `<button class="slot ${on ? 'on' : 'has-mk'}" data-id="${s.id}" data-h="${(b - a) * px - 2}" style="top:${(a - min) * px + 5}px;height:${(b - a) * px - 2}px;--c:${STAGE.color};background:${on ? STAGE.color : hexA(STAGE.color, .16)}">`
         + `<span class="t">${s.start}${s.end ? '–' + s.end : ''}</span><span class="n">${esc(s.title)}</span>${on ? '' : '<span class="mk">＋</span>'}</button>`;
     });
     h += '</div>';
@@ -448,7 +455,7 @@ function gridHTML(mode, opts = {}) {
     h += col();
     mine.forEach(c => {
       const a = toMin(c.start), b = mEnd(c), p = presetOf(c);
-      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * PX - 2}" style="top:${(a - min) * PX + 5}px;height:${(b - a) * PX - 2}px${p ? `;border-left-color:${catColor(p)}` : ''}">`
+      h += `<div class="slot mine" data-cid="${esc(c.id)}" data-h="${(b - a) * px - 2}" style="top:${(a - min) * px + 5}px;height:${(b - a) * px - 2}px${p ? `;border-left-color:${catColor(p)}` : ''}">`
         + `<span class="t">${c.start}${c.end ? '–' + c.end : ''}</span><span class="n">${esc(c.title)}</span>${c.place ? `<span class="pl">📍${esc(c.place)}</span>` : ''}${c.note && !opts.flat ? '<span class="memo-dot">📝</span>' : ''}</div>`;
     });
     h += '</div>';
@@ -651,7 +658,8 @@ let lastBlob = null, lastName = '';
 const canShareFile = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([new Blob()], 'a.png', { type: 'image/png' })] })); } catch (_) { return false; } };
 async function exportImage() {
   if (!window.html2canvas) return toast('画像ライブラリを読み込めませんでした。通信状況を確認してください');
-  const inner = gridHTML('my', { flat: true });
+  // 幅420pxの画像が 9:16 前後に収まるよう、表の本体の高さを決める
+  const inner = gridHTML('my', { flat: true, fit: Math.max(420, 600 - me.wants.length * 20) });
   const wants = me.wants.map(k => PRESET_LIST.find(p => pKey(p) === k)).filter(Boolean);
   if (!inner && !wants.length) return toast('画像にする予定がありません');
   const cd = curDay();
@@ -662,7 +670,8 @@ async function exportImage() {
   toast('画像を作成中…');
   try {
     const el = area.firstElementChild;
-    const canvas = await html2canvas(el, { scale: 2, backgroundColor: getComputedStyle(document.body).backgroundColor, logging: false, windowWidth: Math.max(el.scrollWidth + 40, 480) });
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: getComputedStyle(document.body).backgroundColor, logging: false, width: w, height: h, windowWidth: w + 40, windowHeight: h + 40, scrollX: 0, scrollY: 0 });
     lastBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
     lastName = `ファンフェス_${cd.label}_マイタイテ.png`;
     $('#imgPreview').src = URL.createObjectURL(lastBlob);
