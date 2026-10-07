@@ -3,16 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ファンフェス マイタイテ</title>
-<meta name="description" content="FF14ファンフェスのタイムラインを登録するためのWEBページ。ユーザ登録なしで使えます。">
-<!-- 共有したときのカード表示（画像なし） -->
+<title>マイタイテ for ファンフェス（非公式）</title>
+<meta name="description" content="FF14ファンフェスのタイムラインを登録するための非公式ファンツール（個人制作）。ユーザ登録なしで使えます。">
+<!-- 共有したときのカード表示 -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ファンフェス マイタイテ">
-<meta property="og:title" content="ファンフェス マイタイテ">
-<meta property="og:description" content="FF14ファンフェスのタイムラインを登録するためのWEBページ。ユーザ登録なしで使えます。">
+<meta property="og:site_name" content="マイタイテ for ファンフェス（非公式）">
+<meta property="og:title" content="マイタイテ for ファンフェス（非公式）">
+<meta property="og:description" content="FF14ファンフェスのタイムラインを登録するための非公式ファンツール（個人制作）。ユーザ登録なしで使えます。">
 <meta property="og:url" content="https://ff14aruo.github.io/mytimetable/">
 <meta property="og:locale" content="ja_JP">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://ff14aruo.github.io/mytimetable/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="マイタイテ for ファンフェス（非公式）">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://ff14aruo.github.io/mytimetable/">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -40,6 +44,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
 .title-row{display:flex;align-items:center;gap:8px}
 .title-row h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title-row h1 .unofficial{font-size:12px;font-weight:normal;color:var(--muted)}
 .daytabs{display:flex;gap:6px;margin:12px 0 0;overflow-x:auto}
 .daytabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:99px;padding:5px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .daytabs button small{color:var(--muted);font-weight:400;margin-left:4px}
@@ -176,7 +181,7 @@ label.f > input,label.f > textarea,label.f > select{margin-top:2px}
 <body>
 <div class="app">
   <header class="top">
-    <div class="title-row"><h1 id="evTitle">FF14 ファンフェス マイタイテ</h1></div>
+    <div class="title-row"><h1 id="evTitle">マイタイテ for ファンフェス<small class="unofficial">（非公式）</small></h1></div>
     <div class="countdown" id="countdown"></div>
     <div class="seg" id="viewSeg">
       <button data-v="stage">ステージ</button><button data-v="contents">会場コンテンツ</button><button data-v="my">マイタイテ</button>
@@ -264,7 +269,7 @@ const slash = d => d.replace(/^\d{4}-/, '').replace('-', '/');
 const absTime = (date, hhmm) => { const [y, m, d] = date.split('-').map(Number); const t = new Date(y, m - 1, d); t.setMinutes(toMin(hhmm)); return t.getTime(); };
 
 /* ---------- 公式タイムテーブル（ここを書き換えれば全員に反映） ---------- */
-const EVENT = { name: 'FF14 ファンフェス', days: [{ id: 'd1', label: 'Day1', date: '2026-10-31' }, { id: 'd2', label: 'Day2', date: '2026-11-01' }] };
+const EVENT = { name: 'ファンフェス', days: [{ id: 'd1', label: 'Day1', date: '2026-10-31' }, { id: 'd2', label: 'Day2', date: '2026-11-01' }] };
 const STAGE = { name: 'メインステージ', color: '#e0a800' };
 const SLOTS = [];
 const add = (dayId, start, end, title) => SLOTS.push({ id: dayId + '-' + start.replace(':', ''), dayId, start, end, title });
